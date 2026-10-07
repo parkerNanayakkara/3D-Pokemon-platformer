@@ -2,1087 +2,607 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D Pokémon Starter Adventure</title>
-    <!-- Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Pokémon Adventure</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Three.js Engine -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- FontAwesome Icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
-
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            font-family: 'Outfit', sans-serif;
-            user-select: none;
-            background-color: #030712;
-            color: #fff;
-        }
-
-        .pixel-font {
-            font-family: 'Press Start 2P', monospace;
-        }
-
-        /* FPS Center Crosshair */
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Courier New', Courier, monospace; user-select: none; }
+        #game-canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; }
+        
+        /* UI Layering */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10; pointer-events: none; }
+        
+        /* Crosshair */
         #crosshair {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 14px;
-            height: 14px;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 20;
-        }
-        #crosshair::before, #crosshair::after {
-            content: '';
-            position: absolute;
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
-        }
-        #crosshair::before { top: 6px; left: 0; width: 14px; height: 2px; }
-        #crosshair::after { top: 0; left: 6px; width: 2px; height: 14px; }
-
-        /* Classic Retro Pokémon Dialogue Box */
-        .retro-dialogue-box {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.94));
-            border: 4px solid #3b82f6;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85), inset 0 0 20px rgba(59, 130, 246, 0.3);
-            border-radius: 1.25rem;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 10px; height: 10px; background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%; border: 2px solid rgba(0, 0, 0, 0.5); display: none;
         }
 
-        /* Starter Selection Card Animations */
-        .starter-card {
-            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .starter-card:hover {
-            transform: translateY(-12px) scale(1.04);
-            box-shadow: 0 22px 35px -10px rgba(59, 130, 246, 0.45);
+        /* Start Screen */
+        #start-screen {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; color: white; pointer-events: auto; z-index: 20;
         }
 
-        /* Health Bar Smooth Transitions */
-        .hp-fill {
-            transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out;
+        /* Dialog Box */
+        #dialog-box {
+            position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%);
+            width: 80%; max-width: 800px; background: rgba(0, 0, 0, 0.8);
+            border: 4px solid #fff; border-radius: 12px; padding: 20px; color: white;
+            font-size: 1.2rem; display: none; text-shadow: 2px 2px 0 #000;
         }
 
-        /* Wild Encounter Screen Transition Flash */
-        @keyframes encounterFlash {
-            0% { opacity: 0; background: #ffffff; }
-            20% { opacity: 1; background: #000000; }
-            40% { opacity: 1; background: #ffffff; }
-            60% { opacity: 1; background: #000000; }
-            100% { opacity: 0; background: transparent; }
+        /* Location Label */
+        #location-label {
+            position: absolute; bottom: 20px; right: 20px; background: rgba(0, 0, 0, 0.6);
+            border-left: 4px solid #4ade80; padding: 10px 20px; color: white;
+            font-size: 1.5rem; font-weight: bold; border-radius: 4px; transition: opacity 0.5s;
+            text-transform: uppercase; letter-spacing: 2px;
         }
-        .encounter-flash {
-            animation: encounterFlash 1.2s ease-in-out forwards;
+
+        /* Battle UI */
+        #battle-ui {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; pointer-events: auto;
+        }
+        .hp-box {
+            position: absolute; background: rgba(255, 255, 255, 0.9); border: 4px solid #333;
+            border-radius: 12px; padding: 15px; width: 300px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        #enemy-hp-box { top: 10%; left: 10%; }
+        #player-hp-box { bottom: 25%; right: 10%; }
+        .hp-bar-container { width: 100%; height: 15px; background: #ccc; border-radius: 8px; overflow: hidden; margin-top: 8px; border: 2px solid #555; }
+        .hp-bar { height: 100%; background: #4ade80; width: 100%; transition: width 0.3s ease-in-out; }
+        
+        #battle-menu {
+            position: absolute; bottom: 5%; right: 10%; width: 300px; display: grid;
+            grid-template-columns: 1fr 1fr; gap: 10px;
+        }
+        .battle-btn {
+            background: #f8fafc; border: 4px solid #334155; padding: 15px; font-weight: bold;
+            font-size: 1.1rem; border-radius: 8px; cursor: pointer; text-transform: uppercase;
+            transition: transform 0.1s, background 0.2s;
+        }
+        .battle-btn:hover { background: #e2e8f0; transform: scale(1.05); }
+        .battle-btn:active { transform: scale(0.95); }
+
+        /* Screen Flash for encounters */
+        #flash-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; opacity: 0; pointer-events: none; z-index: 50; transition: opacity 0.1s;
         }
     </style>
+    <!-- Import map for Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
 </head>
-<body class="relative w-screen h-screen overflow-hidden">
+<body>
 
-    <!-- 3D WEBGL CANVAS -->
-    <canvas id="gameCanvas" class="w-full h-full block cursor-pointer"></canvas>
-
-    <!-- AIM CROSSHAIR -->
-    <div id="crosshair" class="hidden"></div>
-
-    <!-- ENCOUNTER FLASH EFFECT OVERLAY -->
-    <div id="flashOverlay" class="fixed inset-0 pointer-events-none z-50 hidden"></div>
-
-    <!-- MAIN HUD OVERLAY -->
-    <div id="hudOverlay" class="absolute inset-0 pointer-events-none flex flex-col justify-between p-4 md:p-6 z-10 opacity-0 transition-opacity duration-500">
-        <!-- TOP STATUS BAR -->
-        <div class="flex justify-between items-start">
-            <!-- PARTNER POKEMON BADGE -->
-            <div id="partnerBadge" class="bg-slate-900/85 backdrop-blur-md p-3.5 rounded-2xl border border-slate-700/80 flex items-center gap-3.5 shadow-2xl">
-                <div id="partnerIcon" class="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-3xl shadow-inner border border-slate-600/50">
-                    🔴
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h3 id="partnerName" class="font-extrabold text-base md:text-lg text-amber-400">Partner</h3>
-                        <span id="partnerType" class="text-[10px] font-bold px-2 py-0.5 bg-blue-600/30 text-blue-300 rounded-full border border-blue-500/30">GRASS</span>
-                    </div>
-                    <div class="flex items-center gap-2 mt-1">
-                        <span class="text-xs font-bold text-slate-400">HP</span>
-                        <div class="w-28 md:w-36 h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                            <div id="partnerHpBar" class="hp-fill h-full bg-emerald-500 w-full"></div>
-                        </div>
-                        <span id="partnerHpText" class="text-xs font-mono text-slate-300">20/20</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CONTROLS GUIDE BOX -->
-            <div class="hidden sm:block bg-slate-900/85 backdrop-blur-md p-3.5 rounded-2xl border border-slate-700/80 text-right text-xs text-slate-300 space-y-1 shadow-2xl">
-                <div><span class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 font-mono text-amber-300">WASD</span> Move</div>
-                <div><span class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 font-mono text-amber-300">Mouse</span> Freelook (Look Around)</div>
-                <div><span class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 font-mono text-amber-300">Shift</span> Run</div>
-                <div><span class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 font-mono text-amber-300">Space</span> Jump / Talk</div>
-                <div class="text-[10px] text-amber-400/90 pt-1"><i class="fa-solid fa-leaf mr-1"></i>Walk into dark grass for wild Pokémon!</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- DIALOGUE MODAL (PROF. OAK & CUTSCENES) -->
-    <div id="dialogueContainer" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] max-w-3xl pointer-events-auto z-30 transition-all duration-300 transform">
-        <div class="retro-dialogue-box p-5 md:p-6 relative">
-            <div id="speakerTag" class="absolute -top-4 left-6 bg-blue-600 text-white px-4 py-1 rounded-full font-black text-xs md:text-sm tracking-wider uppercase shadow-lg border border-blue-400">
-                Prof. Oak
-            </div>
-            <p id="dialogueText" class="text-base md:text-xl text-slate-100 font-medium leading-relaxed min-h-[56px] pt-1">
-                Hello there! Welcome to the world of Pokémon! My name is Professor Oak.
+    <div id="game-container"></div>
+    
+    <div id="ui-layer">
+        <div id="start-screen">
+            <h1 class="text-6xl font-bold mb-8 text-yellow-400 drop-shadow-lg" style="text-shadow: 4px 4px 0 #3b4cca;">POKÉMON 3D ADVENTURE</h1>
+            <p class="text-xl mb-8 max-w-2xl text-center leading-relaxed">
+                Click to enter Pallet Town.<br><br>
+                <b>Controls:</b> WASD to move, Mouse to look around.<br>
+                Look at a Poké Ball and click to choose your starter.<br>
+                Walk into tall grass to encounter wild Pokémon. Find portals to travel to Alola and Galar!
             </p>
-            <div class="flex justify-between items-center mt-3">
-                <span id="dialoguePrompt" class="text-xs text-slate-400 animate-pulse hidden md:inline">Press SPACE or click Next to continue...</span>
-                <button id="nextDialogueBtn" class="ml-auto bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-extrabold px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-lg text-sm">
-                    <span>Next</span>
-                    <i class="fa-solid fa-chevron-right text-xs"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- STARTER SELECTION MODAL -->
-    <div id="starterModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl flex flex-col items-center justify-center p-4 md:p-6 z-40 hidden opacity-0 transition-opacity duration-500 pointer-events-auto">
-        <div class="text-center mb-6 md:mb-8">
-            <span class="px-3.5 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-xs font-bold uppercase tracking-widest mb-3 inline-block">Starter Choice</span>
-            <h2 class="text-3xl md:text-5xl font-black text-white mb-2 tracking-tight">Choose Your Companion</h2>
-            <p class="text-slate-400 text-sm md:text-base max-w-md">Select one of Professor Oak's starter Pokémon to begin your adventure!</p>
+            <button id="btn-start" class="px-8 py-4 bg-red-500 hover:bg-red-600 border-4 border-white rounded-xl text-2xl font-bold transition transform hover:scale-110 pointer-events-auto">
+                CLICK TO START
+            </button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 max-w-5xl w-full">
-            <!-- BULBASAUR CARD -->
-            <div onclick="chooseStarter('bulbasaur')" class="starter-card bg-slate-900/90 rounded-3xl p-6 border-2 border-emerald-500/30 hover:border-emerald-400 bg-gradient-to-b from-emerald-950/40 via-slate-900 to-slate-900 cursor-pointer text-center group">
-                <div class="w-24 h-24 md:w-28 md:h-28 mx-auto mb-4 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-6xl group-hover:scale-110 transition-transform shadow-inner border border-emerald-500/20">
-                    🍃
-                </div>
-                <h3 class="text-2xl font-black text-emerald-400 mb-1">Bulbasaur</h3>
-                <span class="inline-block px-3 py-0.5 bg-emerald-500/20 text-emerald-300 text-xs font-bold rounded-full mb-3 border border-emerald-500/30">GRASS / POISON</span>
-                <p class="text-xs text-slate-400 leading-relaxed mb-5">A seed Pokémon with a plant bulb on its back that absorbs sunlight to fuel its vine attacks.</p>
-                <button class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-lg group-hover:shadow-emerald-600/30 text-sm">Select Bulbasaur</button>
+        <div id="crosshair"></div>
+        <div id="location-label">Pallet Town</div>
+        <div id="dialog-box">...</div>
+
+        <div id="battle-ui">
+            <div id="enemy-hp-box" class="hp-box">
+                <h2 id="enemy-name" class="text-xl font-bold uppercase text-gray-800">Wild Pidgey</h2>
+                <div class="hp-bar-container"><div id="enemy-hp-bar" class="hp-bar"></div></div>
             </div>
-
-            <!-- CHARMANDER CARD -->
-            <div onclick="chooseStarter('charmander')" class="starter-card bg-slate-900/90 rounded-3xl p-6 border-2 border-rose-500/30 hover:border-rose-400 bg-gradient-to-b from-rose-950/40 via-slate-900 to-slate-900 cursor-pointer text-center group">
-                <div class="w-24 h-24 md:w-28 md:h-28 mx-auto mb-4 bg-rose-500/10 rounded-2xl flex items-center justify-center text-6xl group-hover:scale-110 transition-transform shadow-inner border border-rose-500/20">
-                    🔥
-                </div>
-                <h3 class="text-2xl font-black text-rose-400 mb-1">Charmander</h3>
-                <span class="inline-block px-3 py-0.5 bg-rose-500/20 text-rose-300 text-xs font-bold rounded-full mb-3 border border-rose-500/30">FIRE</span>
-                <p class="text-xs text-slate-400 leading-relaxed mb-5">The flame that burns at the tip of its tail is an indication of its health and fiery spirit.</p>
-                <button class="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl transition-all shadow-lg group-hover:shadow-rose-600/30 text-sm">Select Charmander</button>
-            </div>
-
-            <!-- SQUIRTLE CARD -->
-            <div onclick="chooseStarter('squirtle')" class="starter-card bg-slate-900/90 rounded-3xl p-6 border-2 border-cyan-500/30 hover:border-cyan-400 bg-gradient-to-b from-cyan-950/40 via-slate-900 to-slate-900 cursor-pointer text-center group">
-                <div class="w-24 h-24 md:w-28 md:h-28 mx-auto mb-4 bg-cyan-500/10 rounded-2xl flex items-center justify-center text-6xl group-hover:scale-110 transition-transform shadow-inner border border-cyan-500/20">
-                    💧
-                </div>
-                <h3 class="text-2xl font-black text-cyan-400 mb-1">Squirtle</h3>
-                <span class="inline-block px-3 py-0.5 bg-cyan-500/20 text-cyan-300 text-xs font-bold rounded-full mb-3 border border-cyan-500/30">WATER</span>
-                <p class="text-xs text-slate-400 leading-relaxed mb-5">Shoots water streams from inside its shell. Retracts into its shell when in danger.</p>
-                <button class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl transition-all shadow-lg group-hover:shadow-cyan-600/30 text-sm">Select Squirtle</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3D BATTLE OVERLAY MODAL -->
-    <div id="battleModal" class="fixed inset-0 z-40 hidden pointer-events-none flex flex-col justify-between p-4 md:p-8">
-        <!-- BATTLE TOP HUD: ENEMY STATUS -->
-        <div class="flex justify-end">
-            <div class="bg-slate-900/90 backdrop-blur-md p-4 rounded-2xl border-2 border-rose-500/40 w-72 md:w-80 shadow-2xl pointer-events-auto">
-                <div class="flex justify-between items-center mb-1">
-                    <span id="enemyName" class="font-extrabold text-base text-rose-400">Wild Pidgey</span>
-                    <span id="enemyLevel" class="text-xs font-bold px-2 py-0.5 bg-slate-800 rounded-md text-slate-300">Lv. 3</span>
-                </div>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs font-bold text-amber-400">HP</span>
-                    <div class="w-full h-3.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                        <div id="enemyHpBar" class="hp-fill h-full bg-emerald-500 w-full"></div>
-                    </div>
-                </div>
-                <div class="text-right mt-1">
-                    <span id="enemyHpText" class="text-xs font-mono text-slate-400">15/15</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- BATTLE BOTTOM CONTROLS & PLAYER STATUS -->
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end pointer-events-auto">
-            <!-- PLAYER BATTLE BADGE -->
-            <div class="md:col-span-5 bg-slate-900/90 backdrop-blur-md p-4 rounded-2xl border-2 border-blue-500/40 shadow-2xl">
-                <div class="flex justify-between items-center mb-1">
-                    <span id="battlePlayerName" class="font-extrabold text-base text-blue-400">Bulbasaur</span>
-                    <span id="battlePlayerLevel" class="text-xs font-bold px-2 py-0.5 bg-slate-800 rounded-md text-slate-300">Lv. 5</span>
-                </div>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs font-bold text-amber-400">HP</span>
-                    <div class="w-full h-3.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                        <div id="battlePlayerHpBar" class="hp-fill h-full bg-emerald-500 w-full"></div>
-                    </div>
-                </div>
-                <div class="text-right mt-1">
-                    <span id="battlePlayerHpText" class="text-xs font-mono text-slate-300">20/20</span>
-                </div>
-            </div>
-
-            <!-- ACTION COMMAND BUTTONS -->
-            <div class="md:col-span-7 bg-slate-900/95 backdrop-blur-md p-4 rounded-2xl border-2 border-slate-700 shadow-2xl grid grid-cols-2 gap-3">
-                <button onclick="executePlayerMove('tackle')" id="btnMove1" class="py-3 px-4 bg-slate-800 hover:bg-slate-700 active:scale-95 text-white font-extrabold rounded-xl border border-slate-600 transition-all flex justify-between items-center text-sm">
-                    <span>Tackle</span>
-                    <span class="text-xs text-slate-400 font-mono">NORMAL</span>
-                </button>
-                <button onclick="executePlayerMove('special')" id="btnMove2" class="py-3 px-4 bg-emerald-800 hover:bg-emerald-700 active:scale-95 text-white font-extrabold rounded-xl border border-emerald-600 transition-all flex justify-between items-center text-sm">
-                    <span id="specialMoveName">Vine Whip</span>
-                    <span id="specialMoveType" class="text-xs text-emerald-300 font-mono">GRASS</span>
-                </button>
-                <button onclick="attemptCatch()" id="btnCatch" class="py-3 px-4 bg-rose-700 hover:bg-rose-600 active:scale-95 text-white font-extrabold rounded-xl border border-rose-500 transition-all flex items-center justify-center gap-2 text-sm">
-                    <i class="fa-solid fa-bullseye"></i>
-                    <span>Catch (Poké Ball)</span>
-                </button>
-                <button onclick="runFromBattle()" id="btnRun" class="py-3 px-4 bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 font-extrabold rounded-xl border border-slate-500 transition-all flex items-center justify-center gap-2 text-sm">
-                    <i class="fa-solid fa-person-running"></i>
-                    <span>Run Away</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- START PROMPT SCREEN -->
-    <div id="startPrompt" class="fixed inset-0 bg-slate-950/95 flex flex-col items-center justify-center z-50 text-center p-6">
-        <div class="w-24 h-24 bg-rose-600 rounded-full border-4 border-white flex items-center justify-center mb-6 shadow-2xl shadow-rose-600/40 animate-bounce relative">
-            <div class="w-10 h-10 bg-white rounded-full border-4 border-slate-900 flex items-center justify-center">
-                <div class="w-3.5 h-3.5 bg-rose-600 rounded-full"></div>
-            </div>
-        </div>
-        <h1 class="text-4xl md:text-6xl font-black text-white mb-3 tracking-tight">3D POKÉMON ADVENTURE</h1>
-        <p class="text-slate-400 max-w-md text-sm md:text-base mb-8">Visit Professor Oak's Laboratory, select your starter Pokémon, and venture into Pallet Town & Route 1!</p>
-        <button id="startBtn" class="bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 hover:from-red-500 hover:to-amber-400 text-white font-black text-lg px-10 py-4 rounded-2xl shadow-2xl shadow-rose-600/30 transition-all transform hover:scale-105 active:scale-95">
-            Begin Adventure
-        </button>
-    </div>
-
-    <script>
-        class SoundEngine {
-            constructor() {
-                this.ctx = null;
-            }
-
-            init() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-            }
-
-            playBlip() {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(580, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.08);
-                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.08);
-            }
-
-            playAttackSound() {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(240, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.25);
-                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.25);
-            }
-
-            playCatchChime() {
-                if (!this.ctx) return;
-                const notes = [523.25, 659.25, 783.99, 1046.50];
-                notes.forEach((freq, idx) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.1);
-                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime + idx * 0.1);
-                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + idx * 0.1 + 0.2);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(this.ctx.currentTime + idx * 0.1);
-                    osc.stop(this.ctx.currentTime + idx * 0.1 + 0.2);
-                });
-            }
-
-            playFanfare() {
-                if (!this.ctx) return;
-                const notes = [440, 440, 440, 554.37, 659.25];
-                const times = [0, 0.12, 0.24, 0.36, 0.52];
-                notes.forEach((freq, idx) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + times[idx]);
-                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime + times[idx]);
-                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + times[idx] + 0.22);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(this.ctx.currentTime + times[idx]);
-                    osc.stop(this.ctx.currentTime + times[idx] + 0.22);
-                });
-            }
-        }
-
-        const soundSynth = new SoundEngine();
-
-        let scene, camera, renderer;
-        let gameState = 'INTRO'; // INTRO, STARTER_SELECT, FREE_ROAM, BATTLE
-        let oakMesh, labGroup, townGroup, grassPatches = [];
-        let playerCompanionMesh = null, wildPokemonMesh = null, battlePokeballMesh = null;
-
-        const player = {
-            position: new THREE.Vector3(0, 1.6, 5),
-            rotation: new THREE.Euler(0, 0, 0, 'YXZ'),
-            velocity: new THREE.Vector3(),
-            speed: 0.12,
-            runSpeed: 0.22,
-            isGrounded: true,
-            stepCounter: 0,
-            stats: {
-                name: 'Starter',
-                type: 'GRASS',
-                level: 5,
-                hp: 20,
-                maxHp: 20,
-                specialMove: { name: 'Vine Whip', type: 'GRASS', damage: 9 }
-            }
-        };
-
-        const wildEnemies = [
-            { name: 'Wild Pidgey', level: 3, hp: 15, maxHp: 15, type: 'pidgey' },
-            { name: 'Wild Rattata', level: 3, hp: 14, maxHp: 14, type: 'rattata' },
-            { name: 'Wild Pikachu', level: 4, hp: 18, maxHp: 18, type: 'pikachu' }
-        ];
-        let currentWildEnemy = null;
-
-        const keys = {};
-        let isPointerLocked = false;
-
-        const introDialogues = [
-            { speaker: "Prof. Oak", text: "Hello there! Welcome to the world of Pokémon!" },
-            { speaker: "Prof. Oak", text: "My name is Professor Oak! People affectionately call me the Pokémon Professor." },
-            { speaker: "Player", text: "Hello Professor Oak! It's an honor to visit your famous lab in Pallet Town!" },
-            { speaker: "Prof. Oak", text: "Today is the big day! Your journey as a Pokémon Trainer begins right now." },
-            { speaker: "Prof. Oak", text: "On the table over here are three Poké Balls containing your starter Pokémon." },
-            { speaker: "Prof. Oak", text: "Go ahead and pick your companion!" }
-        ];
-        let currentDialogueIndex = 0;
-
-        const startersData = {
-            bulbasaur: {
-                name: "Bulbasaur",
-                type: "GRASS",
-                hp: 20,
-                maxHp: 20,
-                icon: "🍃",
-                color: 0x4ade80,
-                specialMove: { name: "Vine Whip", type: "GRASS", damage: 9 }
-            },
-            charmander: {
-                name: "Charmander",
-                type: "FIRE",
-                hp: 20,
-                maxHp: 20,
-                icon: "🔥",
-                color: 0xf87171,
-                specialMove: { name: "Ember", type: "FIRE", damage: 10 }
-            },
-            squirtle: {
-                name: "Squirtle",
-                type: "WATER",
-                hp: 20,
-                maxHp: 20,
-                icon: "💧",
-                color: 0x38bdf8,
-                specialMove: { name: "Water Gun", type: "WATER", damage: 9 }
-            }
-        };
-
-        function initThreeJS() {
-            const canvas = document.getElementById('gameCanvas');
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x7dd3fc);
-            scene.fog = new THREE.FogExp2(0x7dd3fc, 0.012);
-
-            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.copy(player.position);
-
-            renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-            // Lights
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
-            scene.add(ambientLight);
-
-            const sun = new THREE.DirectionalLight(0xfffbdb, 0.85);
-            sun.position.set(30, 50, 25);
-            sun.castShadow = true;
-            sun.shadow.mapSize.width = 2048;
-            sun.shadow.mapSize.height = 2048;
-            sun.shadow.camera.near = 0.5;
-            sun.shadow.camera.far = 150;
-            const d = 40;
-            sun.shadow.camera.left = -d;
-            sun.shadow.camera.right = d;
-            sun.shadow.camera.top = d;
-            sun.shadow.camera.bottom = -d;
-            scene.add(sun);
-
-            // Construct 3D Environments
-            buildOakLab();
-            buildPalletTown();
-
-            window.addEventListener('resize', onWindowResize);
-            setupControls();
-        }
-
-        function buildOakLab() {
-            labGroup = new THREE.Group();
-
-            // Floor
-            const floorMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.4 });
-            const floor = new THREE.Mesh(new THREE.BoxGeometry(16, 0.2, 16), floorMat);
-            floor.position.y = -0.1;
-            floor.receiveShadow = true;
-            labGroup.add(floor);
-
-            // Walls
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0xfffbe1, roughness: 0.8 });
-            const backWall = new THREE.Mesh(new THREE.BoxGeometry(16, 6, 0.4), wallMat);
-            backWall.position.set(0, 3, -8);
-            backWall.receiveShadow = true;
-            labGroup.add(backWall);
-
-            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 6, 16), wallMat);
-            leftWall.position.set(-8, 3, 0);
-            labGroup.add(leftWall);
-
-            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 6, 16), wallMat);
-            rightWall.position.set(8, 3, 0);
-            labGroup.add(rightWall);
-
-            // Starter Presentation Table
-            const tableMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.5 });
-            const table = new THREE.Mesh(new THREE.BoxGeometry(4.5, 1.1, 1.8), tableMat);
-            table.position.set(0, 0.55, -2);
-            table.castShadow = true;
-            table.receiveShadow = true;
-            labGroup.add(table);
-
-            // 3 Starter Poké Balls
-            [-1.1, 0, 1.1].forEach((x) => {
-                const pb = createPokeballMesh();
-                pb.position.set(x, 1.25, -2);
-                labGroup.add(pb);
-            });
-
-            // Professor Oak NPC
-            oakMesh = createOakMesh();
-            oakMesh.position.set(0, 0, -3.8);
-            labGroup.add(oakMesh);
-
-            // Bookshelf
-            const shelfMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
-            const shelf = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4.5, 0.8), shelfMat);
-            shelf.position.set(-5.8, 2.25, -7.5);
-            shelf.castShadow = true;
-            labGroup.add(shelf);
-
-            scene.add(labGroup);
-        }
-
-        function createOakMesh() {
-            const oak = new THREE.Group();
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
-            const hairMat = new THREE.MeshStandardMaterial({ color: 0x9ca3af });
-            const coatMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc });
-            const shirtMat = new THREE.MeshStandardMaterial({ color: 0xd97706 });
-            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
-
-            // Head & Hair
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), skinMat);
-            head.position.y = 1.6;
-            head.castShadow = true;
-            oak.add(head);
-
-            const hair = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.22, 0.65), hairMat);
-            hair.position.set(0, 1.8, -0.05);
-            oak.add(hair);
-
-            // Torso & Lab Coat
-            const coat = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.42, 0.95, 12), coatMat);
-            coat.position.y = 1.0;
-            coat.castShadow = true;
-            oak.add(coat);
-
-            const shirt = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.28, 0.9, 12), shirtMat);
-            shirt.position.set(0, 1.0, 0.05);
-            oak.add(shirt);
-
-            // Legs
-            const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.6), pantsMat);
-            legL.position.set(-0.15, 0.3, 0);
-            const legR = legL.clone();
-            legR.position.x = 0.15;
-            oak.add(legL, legR);
-
-            return oak;
-        }
-
-        function createPokeballMesh() {
-            const ball = new THREE.Group();
-            const redMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.2, metalness: 0.4 });
-            const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 });
-            const blackMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
-            const btnMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.2 });
-
-            const top = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), redMat);
-            const bot = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), whiteMat);
-            const band = new THREE.Mesh(new THREE.CylinderGeometry(0.202, 0.202, 0.03, 16), blackMat);
-            const button = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.04, 12), btnMat);
-            button.rotation.x = Math.PI / 2;
-            button.position.z = 0.19;
-
-            ball.add(top, bot, band, button);
-            ball.castShadow = true;
-            return ball;
-        }
-
-        function buildPalletTown() {
-            townGroup = new THREE.Group();
-            townGroup.position.set(0, 0, -45);
-
-            // Terrain Grass
-            const grassMat = new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 0.9 });
-            const terrain = new THREE.Mesh(new THREE.PlaneGeometry(140, 140), grassMat);
-            terrain.rotation.x = -Math.PI / 2;
-            terrain.receiveShadow = true;
-            townGroup.add(terrain);
-
-            // Dirt Paths
-            const pathMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 1.0 });
-            const mainPath = new THREE.Mesh(new THREE.PlaneGeometry(10, 80), pathMat);
-            mainPath.rotation.x = -Math.PI / 2;
-            mainPath.position.set(0, 0.02, 10);
-            mainPath.receiveShadow = true;
-            townGroup.add(mainPath);
-
-            // Lab Exterior
-            const labExtMat = new THREE.MeshStandardMaterial({ color: 0xfef08a });
-            const roofMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c });
-            const labExt = new THREE.Mesh(new THREE.BoxGeometry(16, 8, 14), labExtMat);
-            labExt.position.set(0, 4, -20);
-            labExt.castShadow = true;
             
-            const labRoof = new THREE.Mesh(new THREE.ConeGeometry(13, 5, 4), roofMat);
-            labRoof.position.set(0, 10.5, -20);
-            labRoof.rotation.y = Math.PI / 4;
-            townGroup.add(labExt, labRoof);
+            <div id="player-hp-box" class="hp-box">
+                <h2 id="player-name" class="text-xl font-bold uppercase text-gray-800">Bulbasaur</h2>
+                <div class="hp-bar-container"><div id="player-hp-bar" class="hp-bar"></div></div>
+            </div>
 
-            // Trees
-            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
-            const leafMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.6 });
+            <div id="battle-menu">
+                <button class="battle-btn" onclick="battleAction('fight')">FIGHT</button>
+                <button class="battle-btn" onclick="battleAction('catch')">CATCH</button>
+                <button class="battle-btn" onclick="battleAction('run')">RUN</button>
+            </div>
+        </div>
 
-            for (let i = 0; i < 60; i++) {
-                const tree = new THREE.Group();
-                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.55, 2.5), trunkMat);
-                trunk.position.y = 1.25;
-                trunk.castShadow = true;
+        <div id="flash-overlay"></div>
+    </div>
 
-                const leaves = new THREE.Mesh(new THREE.ConeGeometry(2.2, 4.5, 7), leafMat);
-                leaves.position.y = 4.0;
-                leaves.castShadow = true;
+    <script type="module">
+        import * as THREE from 'three';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-                tree.add(trunk, leaves);
+        const GAME_STATES = { INTRO: 0, EXPLORATION: 1, BATTLE: 2 };
+        let currentState = GAME_STATES.INTRO;
+        let currentLocation = "Pallet Town";
 
-                const rx = (Math.random() - 0.5) * 120;
-                const rz = (Math.random() - 0.5) * 120;
-                if (Math.abs(rx) > 8 || Math.abs(rz - 10) > 15) {
-                    tree.position.set(rx, 0, rz);
-                    townGroup.add(tree);
-                }
-            }
+        // Three.js Core
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB); // Default sky blue
+        scene.fog = new THREE.FogExp2(0x87CEEB, 0.015);
 
-            // Wild Tall Grass Patches
-            createGrassPatches();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        
+        // Realistic Tone Mapping Requirement
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        document.getElementById('game-container').appendChild(renderer.domElement);
 
-            scene.add(townGroup);
-        }
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
 
-        function createGrassPatches() {
-            const darkGrassMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.7 });
-            const patchPositions = [
-                { x: 12, z: 20 }, { x: -14, z: 25 }, { x: 15, z: 35 }, { x: -12, z: 40 }
-            ];
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        dirLight.position.set(50, 100, 50);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 500;
+        dirLight.shadow.camera.left = -100;
+        dirLight.shadow.camera.right = 100;
+        dirLight.shadow.camera.top = 100;
+        dirLight.shadow.camera.bottom = -100;
+        scene.add(dirLight);
 
-            patchPositions.forEach((pos) => {
-                const patchGroup = new THREE.Group();
-                patchGroup.position.set(pos.x, 0, pos.z);
+        // Controls
+        const controls = new PointerLockControls(camera, document.body);
+        
+        // Movement Variables
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+        let moveForward = false; let moveBackward = false;
+        let moveLeft = false; let moveRight = false;
+        let prevTime = performance.now();
+        const movementSpeed = 40.0;
 
-                for (let i = 0; i < 25; i++) {
-                    const blade = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.9, 4), darkGrassMat);
-                    blade.position.set((Math.random() - 0.5) * 6, 0.45, (Math.random() - 0.5) * 6);
-                    blade.rotation.y = Math.random() * Math.PI;
-                    patchGroup.add(blade);
-                }
+        // Game Entities
+        let playerStarter = null;
+        let followerMesh = null;
+        let encounterZones = [];
+        let portals = [];
+        const interactables = []; // For Raycasting (Pokeballs)
+        
+        // Battle Variables
+        let battleTarget = null;
+        let preBattlePosition = new THREE.Vector3();
+        let preBattleRotation = new THREE.Euler();
+        let enemyMaxHP = 100; let enemyCurrentHP = 100;
+        let playerMaxHP = 100; let playerCurrentHP = 100;
+        let battleTurn = 'player'; // 'player' or 'enemy'
 
-                townGroup.add(patchGroup);
-                grassPatches.push({ x: pos.x, z: pos.z - 45, radius: 4 });
-            });
-        }
+        // UI Elements
+        const ui = {
+            start: document.getElementById('start-screen'),
+            btnStart: document.getElementById('btn-start'),
+            crosshair: document.getElementById('crosshair'),
+            dialog: document.getElementById('dialog-box'),
+            location: document.getElementById('location-label'),
+            battle: document.getElementById('battle-ui'),
+            flash: document.getElementById('flash-overlay'),
+            enemyName: document.getElementById('enemy-name'),
+            playerName: document.getElementById('player-name'),
+            enemyHP: document.getElementById('enemy-hp-bar'),
+            playerHP: document.getElementById('player-hp-bar')
+        };
 
-        function createPokemonMesh(type) {
+        // We use basic primitives to simulate Pokémon without external assets.
+        
+        const materials = {
+            red: new THREE.MeshStandardMaterial({ color: 0xff0000, roughness: 0.7 }),
+            white: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7 }),
+            black: new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 }),
+            wood: new THREE.MeshStandardMaterial({ color: 0x8B5A2B, roughness: 0.9 }),
+            grass: new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 1.0 }),
+            oak: new THREE.MeshStandardMaterial({ color: 0xffdcb1, roughness: 0.5 }), // Skin
+            labCoat: new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.8 }),
+        };
+
+        function createPokeball(userData) {
             const group = new THREE.Group();
-            let bodyMat, accentMat;
+            
+            // Top half (Red)
+            const topGeo = new THREE.SphereGeometry(0.5, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            const topMesh = new THREE.Mesh(topGeo, materials.red);
+            topMesh.castShadow = true;
+            group.add(topMesh);
 
-            if (type === 'bulbasaur') {
-                bodyMat = new THREE.MeshStandardMaterial({ color: 0x34d399 });
-                accentMat = new THREE.MeshStandardMaterial({ color: 0x15803d });
+            // Bottom half (White)
+            const botGeo = new THREE.SphereGeometry(0.5, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
+            const botMesh = new THREE.Mesh(botGeo, materials.white);
+            botMesh.castShadow = true;
+            group.add(botMesh);
 
-                const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.7, 1.1), bodyMat);
-                body.position.y = 0.45;
-                body.castShadow = true;
+            // Center Band (Black)
+            const bandGeo = new THREE.TorusGeometry(0.5, 0.05, 16, 32);
+            const bandMesh = new THREE.Mesh(bandGeo, materials.black);
+            bandMesh.rotation.x = Math.PI / 2;
+            group.add(bandMesh);
 
-                const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.42, 8, 8), accentMat);
-                bulb.position.set(0, 0.9, -0.1);
-                bulb.castShadow = true;
+            // Button (White)
+            const btnGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.1, 16);
+            const btnMesh = new THREE.Mesh(btnGeo, materials.white);
+            btnMesh.rotation.x = Math.PI / 2;
+            btnMesh.position.z = 0.5;
+            group.add(btnMesh);
 
-                const head = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), bodyMat);
-                head.position.set(0, 0.8, 0.45);
-
-                group.add(body, bulb, head);
-            } else if (type === 'charmander') {
-                bodyMat = new THREE.MeshStandardMaterial({ color: 0xf87171 });
-
-                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 0.9), bodyMat);
-                body.position.y = 0.55;
-                body.castShadow = true;
-
-                const head = new THREE.Mesh(new THREE.SphereGeometry(0.38, 12, 12), bodyMat);
-                head.position.set(0, 1.1, 0.1);
-
-                const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.12, 0.7), bodyMat);
-                tail.position.set(0, 0.4, -0.5);
-                tail.rotation.x = -Math.PI / 4;
-
-                const flame = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.45, 8), new THREE.MeshBasicMaterial({ color: 0xfc2e07 }));
-                flame.position.set(0, 0.7, -0.75);
-
-                group.add(body, head, tail, flame);
-            } else if (type === 'squirtle') {
-                bodyMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8 });
-                accentMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
-
-                const body = new THREE.Mesh(new THREE.SphereGeometry(0.45, 12, 12), bodyMat);
-                body.position.y = 0.5;
-                body.castShadow = true;
-
-                const shell = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.8, 0.6), accentMat);
-                shell.position.set(0, 0.5, -0.15);
-
-                const head = new THREE.Mesh(new THREE.SphereGeometry(0.35, 12, 12), bodyMat);
-                head.position.set(0, 1.0, 0.1);
-
-                group.add(body, shell, head);
-            } else if (type === 'pidgey') {
-                bodyMat = new THREE.MeshStandardMaterial({ color: 0xa16207 });
-                const wingMat = new THREE.MeshStandardMaterial({ color: 0xfef08a });
-
-                const body = new THREE.Mesh(new THREE.SphereGeometry(0.4, 10, 10), bodyMat);
-                body.position.y = 0.4;
-
-                const wingL = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.3), wingMat);
-                wingL.position.set(-0.4, 0.45, 0);
-                const wingR = wingL.clone();
-                wingR.position.x = 0.4;
-
-                group.add(body, wingL, wingR);
-            } else if (type === 'rattata') {
-                bodyMat = new THREE.MeshStandardMaterial({ color: 0x8b5cf6 });
-
-                const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.8), bodyMat);
-                body.position.y = 0.3;
-
-                const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 8), bodyMat);
-                head.position.set(0, 0.4, 0.4);
-
-                group.add(body, head);
-            } else if (type === 'pikachu') {
-                bodyMat = new THREE.MeshStandardMaterial({ color: 0xfacc15 });
-
-                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.35, 0.8), bodyMat);
-                body.position.y = 0.5;
-
-                const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 10), bodyMat);
-                head.position.set(0, 1.0, 0.05);
-
-                const earL = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.4, 6), bodyMat);
-                earL.position.set(-0.2, 1.4, 0);
-                earL.rotation.z = -0.3;
-                const earR = earL.clone();
-                earR.position.x = 0.2;
-                earR.rotation.z = 0.3;
-
-                group.add(body, head, earL, earR);
-            }
+            // Invisible hit box for raycasting
+            const hitGeo = new THREE.SphereGeometry(0.6, 16, 16);
+            const hitMat = new THREE.MeshBasicMaterial({ visible: false });
+            const hitMesh = new THREE.Mesh(hitGeo, hitMat);
+            hitMesh.userData = userData;
+            group.add(hitMesh);
+            interactables.push(hitMesh);
 
             return group;
         }
 
-        function setupControls() {
-            const startBtn = document.getElementById('startBtn');
-            const nextDialogueBtn = document.getElementById('nextDialogueBtn');
-            const canvas = document.getElementById('gameCanvas');
+        function createPokemon(type) {
+            const group = new THREE.Group();
+            let bodyMat, featureMat, bodyGeo;
 
-            startBtn.addEventListener('click', () => {
-                soundSynth.init();
-                soundSynth.playBlip();
-                document.getElementById('startPrompt').classList.add('hidden');
-                updateDialogueUI();
+            switch(type.toLowerCase()) {
+                case 'bulbasaur':
+                    bodyMat = new THREE.MeshStandardMaterial({ color: 0x45b69c }); // Teal body
+                    featureMat = new THREE.MeshStandardMaterial({ color: 0x78c850 }); // Green bulb
+                    bodyGeo = new THREE.BoxGeometry(1, 0.8, 1);
+                    const bulbGeo = new THREE.SphereGeometry(0.6, 16, 16);
+                    const bulb = new THREE.Mesh(bulbGeo, featureMat);
+                    bulb.position.y = 0.6;
+                    bulb.position.z = -0.2;
+                    bulb.castShadow = true;
+                    group.add(bulb);
+                    break;
+                case 'charmander':
+                    bodyMat = new THREE.MeshStandardMaterial({ color: 0xf08030 }); // Orange body
+                    featureMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000 }); // Flame tail
+                    bodyGeo = new THREE.CylinderGeometry(0.5, 0.6, 1.2, 16);
+                    const tailGeo = new THREE.ConeGeometry(0.2, 0.6, 16);
+                    const tail = new THREE.Mesh(tailGeo, featureMat);
+                    tail.position.set(0, -0.2, -0.6);
+                    tail.rotation.x = -Math.PI / 4;
+                    group.add(tail);
+                    break;
+                case 'squirtle':
+                    bodyMat = new THREE.MeshStandardMaterial({ color: 0x6890f0 }); // Blue body
+                    featureMat = new THREE.MeshStandardMaterial({ color: 0xa8a878 }); // Brown shell
+                    bodyGeo = new THREE.BoxGeometry(0.9, 1.1, 0.9);
+                    const shellGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.4, 16);
+                    const shell = new THREE.Mesh(shellGeo, featureMat);
+                    shell.rotation.x = Math.PI / 2;
+                    shell.position.z = -0.5;
+                    group.add(shell);
+                    break;
+                case 'pidgey':
+                    bodyMat = new THREE.MeshStandardMaterial({ color: 0xa890f0 }); // Brownish
+                    featureMat = new THREE.MeshStandardMaterial({ color: 0xf8d030 }); // Yellow beak
+                    bodyGeo = new THREE.SphereGeometry(0.6, 16, 16);
+                    const beakGeo = new THREE.ConeGeometry(0.2, 0.4, 16);
+                    const beak = new THREE.Mesh(beakGeo, featureMat);
+                    beak.rotation.x = Math.PI / 2;
+                    beak.position.set(0, 0, 0.6);
+                    group.add(beak);
+                    break;
+                case 'rattata':
+                    bodyMat = new THREE.MeshStandardMaterial({ color: 0xa8a878 }); // Purple/grey
+                    bodyGeo = new THREE.BoxGeometry(0.8, 0.6, 1.2);
+                    break;
+                case 'pikachu':
+                    bodyMat = new THREE.MeshStandardMaterial({ color: 0xf8d030 }); // Yellow
+                    featureMat = new THREE.MeshStandardMaterial({ color: 0x000000 }); // Black ear tips
+                    bodyGeo = new THREE.BoxGeometry(0.8, 1, 0.8);
+                    const earGeo = new THREE.ConeGeometry(0.15, 0.6, 16);
+                    const ear1 = new THREE.Mesh(earGeo, bodyMat);
+                    ear1.position.set(-0.3, 0.8, 0);
+                    ear1.rotation.z = Math.PI / 6;
+                    const ear2 = ear1.clone();
+                    ear2.position.set(0.3, 0.8, 0);
+                    ear2.rotation.z = -Math.PI / 6;
+                    group.add(ear1); group.add(ear2);
+                    break;
+                case 'alolan vulpix':
+                    bodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff }); // White
+                    featureMat = new THREE.MeshStandardMaterial({ color: 0xccffff }); // Icy blue
+                    bodyGeo = new THREE.BoxGeometry(0.8, 0.9, 0.8);
+                    const hairGeo = new THREE.SphereGeometry(0.4, 16, 16);
+                    const hair = new THREE.Mesh(hairGeo, featureMat);
+                    hair.position.y = 0.6;
+                    group.add(hair);
+                    break;
+                case 'galarian slowpoke':
+                    bodyMat = new THREE.MeshStandardMaterial({ color: 0xf85888 }); // Pink
+                    featureMat = new THREE.MeshStandardMaterial({ color: 0xf8d030 }); // Yellow head
+                    bodyGeo = new THREE.BoxGeometry(1.2, 0.7, 1.5);
+                    const headGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+                    const head = new THREE.Mesh(headGeo, featureMat);
+                    head.position.set(0, 0.5, 0.8);
+                    group.add(head);
+                    break;
+                default:
+                    bodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+                    bodyGeo = new THREE.BoxGeometry(1, 1, 1);
+            }
+
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.castShadow = true;
+            body.receiveShadow = true;
+            body.position.y = 0.5; // Lift above ground
+            group.add(body);
+            
+            // Add some bounce animation data
+            group.userData = { initialY: group.position.y, type: type };
+            return group;
+        }
+
+        function createProfessorOak() {
+            const group = new THREE.Group();
+            
+            // Body (Lab Coat)
+            const bodyGeo = new THREE.CylinderGeometry(0.5, 0.6, 2, 16);
+            const body = new THREE.Mesh(bodyGeo, materials.labCoat);
+            body.position.y = 1;
+            body.castShadow = true;
+            group.add(body);
+
+            // Head
+            const headGeo = new THREE.SphereGeometry(0.4, 16, 16);
+            const head = new THREE.Mesh(headGeo, materials.oak);
+            head.position.y = 2.4;
+            head.castShadow = true;
+            group.add(head);
+
+            return group;
+        }
+
+        function createEnvironment() {
+            
+            // 1. Global Ground (Very large, base green)
+            const groundGeo = new THREE.PlaneGeometry(3000, 3000);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x55aa55, roughness: 1.0 });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // --- PALLET TOWN (Origin: 0, 0, 0) ---
+            
+            // Professor Oak's Lab (Simple Box)
+            const labGeo = new THREE.BoxGeometry(10, 5, 8);
+            const labMat = new THREE.MeshStandardMaterial({ color: 0xf5f5dc }); // Beige
+            const lab = new THREE.Mesh(labGeo, labMat);
+            lab.position.set(0, 2.5, -10);
+            lab.castShadow = true; lab.receiveShadow = true;
+            scene.add(lab);
+
+            // Oak's Table
+            const tableGeo = new THREE.BoxGeometry(4, 1, 2);
+            const table = new THREE.Mesh(tableGeo, materials.wood);
+            table.position.set(0, 0.5, -4);
+            table.castShadow = true; table.receiveShadow = true;
+            scene.add(table);
+
+            // 3 Starter Pokeballs on table
+            const pb1 = createPokeball({ type: 'starter', pokemon: 'Bulbasaur' });
+            pb1.position.set(-1.2, 1.5, -4);
+            scene.add(pb1);
+
+            const pb2 = createPokeball({ type: 'starter', pokemon: 'Charmander' });
+            pb2.position.set(0, 1.5, -4);
+            scene.add(pb2);
+
+            const pb3 = createPokeball({ type: 'starter', pokemon: 'Squirtle' });
+            pb3.position.set(1.2, 1.5, -4);
+            scene.add(pb3);
+
+            // Professor Oak
+            const oak = createProfessorOak();
+            oak.position.set(0, 0, -6);
+            scene.add(oak);
+
+            // Route 1 Path
+            const pathGeo = new THREE.PlaneGeometry(6, 100);
+            const pathMat = new THREE.MeshStandardMaterial({ color: 0xc2b280 }); // Dirt
+            const path = new THREE.Mesh(pathGeo, pathMat);
+            path.rotation.x = -Math.PI / 2;
+            path.position.set(0, 0.01, 45); // Extends positive Z
+            path.receiveShadow = true;
+            scene.add(path);
+
+            // Tall Grass on Route 1 (Encounter Zones)
+            createTallGrassZone(-10, 10, 20, 40, "Route 1", ['Pidgey', 'Rattata']);
+            createTallGrassZone(-15, -5, 50, 80, "Route 1", ['Pikachu', 'Pidgey']);
+            createTallGrassZone(5, 15, 60, 90, "Route 1", ['Rattata', 'Pikachu']);
+
+            // --- ALOLA REGION (Origin: 1000, 0, 0) ---
+            const alolaBaseGeo = new THREE.PlaneGeometry(100, 100);
+            const alolaBaseMat = new THREE.MeshStandardMaterial({ color: 0xffe4b5 }); // Sand
+            const alolaBase = new THREE.Mesh(alolaBaseGeo, alolaBaseMat);
+            alolaBase.rotation.x = -Math.PI / 2;
+            alolaBase.position.set(1000, 0.02, 0);
+            alolaBase.receiveShadow = true;
+            scene.add(alolaBase);
+            createTallGrassZone(980, 1020, -20, 20, "Alola Region", ['Alolan Vulpix', 'Pidgey']);
+
+            // --- GALAR REGION (Origin: -1000, 0, 0) ---
+            const galarBaseGeo = new THREE.PlaneGeometry(100, 100);
+            const galarBaseMat = new THREE.MeshStandardMaterial({ color: 0x2e8b57 }); // Sea green (misty)
+            const galarBase = new THREE.Mesh(galarBaseGeo, galarBaseMat);
+            galarBase.rotation.x = -Math.PI / 2;
+            galarBase.position.set(-1000, 0.02, 0);
+            galarBase.receiveShadow = true;
+            scene.add(galarBase);
+            createTallGrassZone(-1020, -980, -20, 20, "Galar Region", ['Galarian Slowpoke', 'Rattata']);
+
+            // --- PORTALS ---
+            createPortal(-20, 0, 30, 1000, 0, 30, 0xffaa00, "Alola Portal"); // Pallet to Alola
+            createPortal(20, 0, 30, -1000, 0, 30, 0xaa00ff, "Galar Portal"); // Pallet to Galar
+            
+            // Return Portals
+            createPortal(1000, 0, 40, 0, 0, 30, 0x00aaff, "Return to Kanto");
+            createPortal(-1000, 0, 40, 0, 0, 30, 0x00aaff, "Return to Kanto");
+        }
+
+        function createTallGrassZone(xMin, xMax, zMin, zMax, regionName, encounterPool) {
+            // Invisible bounding box for logic
+            encounterZones.push({ xMin, xMax, zMin, zMax, regionName, encounterPool });
+
+            // Visual instanced grass for performance
+            const density = 0.5; 
+            const count = Math.floor(Math.abs(xMax - xMin) * Math.abs(zMax - zMin) * density);
+            
+            const grassGeo = new THREE.BoxGeometry(0.2, 1.5, 0.2);
+            // Slightly darker green than ground
+            const grassMat = new THREE.MeshStandardMaterial({ color: 0x228B22 }); 
+            const instancedGrass = new THREE.InstancedMesh(grassGeo, grassMat, count);
+            instancedGrass.castShadow = true;
+            instancedGrass.receiveShadow = true;
+
+            const dummy = new THREE.Object3D();
+            for(let i=0; i < count; i++) {
+                const x = xMin + Math.random() * (xMax - xMin);
+                const z = zMin + Math.random() * (zMax - zMin);
+                dummy.position.set(x, 0.75, z); // half height
+                dummy.rotation.y = Math.random() * Math.PI;
+                dummy.updateMatrix();
+                instancedGrass.setMatrixAt(i, dummy.matrix);
+            }
+            scene.add(instancedGrass);
+        }
+
+        function createPortal(startX, startY, startZ, destX, destY, destZ, colorHex, name) {
+            const portalGroup = new THREE.Group();
+            portalGroup.position.set(startX, startY + 2, startZ);
+
+            // Glowing Ring
+            const ringGeo = new THREE.TorusGeometry(1.5, 0.2, 16, 32);
+            const ringMat = new THREE.MeshBasicMaterial({ color: colorHex });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            portalGroup.add(ring);
+
+            // Point Light
+            const light = new THREE.PointLight(colorHex, 2, 10);
+            portalGroup.add(light);
+
+            scene.add(portalGroup);
+            
+            portals.push({
+                mesh: portalGroup,
+                target: new THREE.Vector3(destX, destY, destZ),
+                radius: 2.5
             });
+        }
 
-            nextDialogueBtn.addEventListener('click', () => {
-                soundSynth.playBlip();
-                advanceDialogue();
-            });
+        ui.btnStart.addEventListener('click', () => {
+            ui.start.style.display = 'none';
+            controls.lock();
+        });
 
-            window.addEventListener('keydown', (e) => {
-                keys[e.code] = true;
-                if (e.code === 'Space') {
-                    if (gameState === 'INTRO') {
-                        advanceDialogue();
-                    } else if (gameState === 'FREE_ROAM' && player.isGrounded) {
-                        player.velocity.y = 0.15;
-                        player.isGrounded = false;
+        controls.addEventListener('lock', function () {
+            if (currentState === GAME_STATES.INTRO) {
+                ui.crosshair.style.display = 'block';
+                showDialog("Prof. Oak: Welcome to the world of Pokémon! Choose a Poké Ball on the table to select your starter.");
+            } else if (currentState === GAME_STATES.EXPLORATION) {
+                ui.crosshair.style.display = 'block';
+            }
+        });
+
+        controls.addEventListener('unlock', function () {
+            ui.crosshair.style.display = 'none';
+            if(currentState !== GAME_STATES.BATTLE) {
+                ui.start.style.display = 'flex';
+                ui.start.querySelector('h1').innerText = "PAUSED";
+                ui.start.querySelector('p').innerHTML = "Click to resume your adventure.";
+            }
+        });
+
+        // Event listeners for keyboard
+        const onKeyDown = function (event) {
+            switch (event.code) {
+                case 'ArrowUp': case 'KeyW': moveForward = true; break;
+                case 'ArrowLeft': case 'KeyA': moveLeft = true; break;
+                case 'ArrowDown': case 'KeyS': moveBackward = true; break;
+                case 'ArrowRight': case 'KeyD': moveRight = true; break;
+            }
+        };
+
+        const onKeyUp = function (event) {
+            switch (event.code) {
+                case 'ArrowUp': case 'KeyW': moveForward = false; break;
+                case 'ArrowLeft': case 'KeyA': moveLeft = false; break;
+                case 'ArrowDown': case 'KeyS': moveBackward = false; break;
+                case 'ArrowRight': case 'KeyD': moveRight = false; break;
+            }
+        };
+
+        document.addEventListener('keydown', onKeyDown);
+        document.addEventListener('keyup', onKeyUp);
+
+        // Raycaster for clicking objects (Starter selection)
+        const raycaster = new THREE.Raycaster();
+        document.addEventListener('mousedown', (event) => {
+            if (!controls.isLocked) return;
+            if (currentState === GAME_STATES.INTRO) {
+                // Raycast from center of screen
+                raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+                const intersects = raycaster.intersectObjects(interactables);
+                if (intersects.length > 0) {
+                    const hit = intersects[0].object;
+                    if (hit.userData && hit.userData.type === 'starter') {
+                        selectStarter(hit.userData.pokemon);
                     }
                 }
-            });
+            }
+        });
 
-            window.addEventListener('keyup', (e) => {
-                keys[e.code] = false;
-            });
-
-            canvas.addEventListener('click', () => {
-                if (gameState === 'FREE_ROAM') {
-                    canvas.requestPointerLock();
-                }
-            });
-
-            document.addEventListener('pointerlockchange', () => {
-                isPointerLocked = (document.pointerLockElement === canvas);
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isPointerLocked || gameState !== 'FREE_ROAM') return;
-                const sensitivity = 0.0025;
-                player.rotation.y -= e.movementX * sensitivity;
-                player.rotation.x -= e.movementY * sensitivity;
-                player.rotation.x = Math.max(-Math.PI / 2.6, Math.min(Math.PI / 2.6, player.rotation.x));
-            });
+        function showDialog(text, duration = 4000) {
+            ui.dialog.innerText = text;
+            ui.dialog.style.display = 'block';
+            setTimeout(() => { ui.dialog.style.display = 'none'; }, duration);
         }
 
-        function advanceDialogue() {
-            currentDialogueIndex++;
-            if (currentDialogueIndex < introDialogues.length) {
-                updateDialogueUI();
-            } else if (gameState === 'INTRO') {
-                gameState = 'STARTER_SELECT';
-                document.getElementById('dialogueContainer').classList.add('opacity-0', 'pointer-events-none');
-                
-                const starterModal = document.getElementById('starterModal');
-                starterModal.classList.remove('hidden');
-                setTimeout(() => starterModal.classList.remove('opacity-0'), 50);
+        function updateLocationUI(name) {
+            if (currentLocation !== name) {
+                currentLocation = name;
+                ui.location.innerText = name;
+                ui.location.style.opacity = '1';
+                // Adjust environment based on region
+                if(name === "Alola Region") scene.background = new THREE.Color(0x00BFFF); // Brighter sky
+                else if (name === "Galar Region") scene.background = new THREE.Color(0x708090); // Slate gray sky
+                else scene.background = new THREE.Color(0x87CEEB); // Default sky
+                scene.fog.color = scene.background;
             }
         }
 
-        function updateDialogueUI() {
-            const d = introDialogues[currentDialogueIndex];
-            document.getElementById('speakerTag').innerText = d.speaker;
-            document.getElementById('dialogueText').innerText = d.text;
-        }
-
-        window.chooseStarter = function(type) {
-            soundSynth.playCatchChime();
-            const data = startersData[type];
-
-            player.stats.name = data.name;
-            player.stats.type = data.type;
-            player.stats.hp = data.hp;
-            player.stats.maxHp = data.maxHp;
-            player.stats.specialMove = data.specialMove;
-
-            // Hide Starter Modal
-            const starterModal = document.getElementById('starterModal');
-            starterModal.classList.add('opacity-0');
-            setTimeout(() => starterModal.classList.add('hidden'), 500);
-
-            // Spawn 3D Companion
-            if (playerCompanionMesh) scene.remove(playerCompanionMesh);
-            playerCompanionMesh = createPokemonMesh(type);
-            scene.add(playerCompanionMesh);
-
-            // Update HUD
-            document.getElementById('partnerIcon').innerText = data.icon;
-            document.getElementById('partnerName').innerText = data.name;
-            document.getElementById('partnerType').innerText = data.type;
-            document.getElementById('specialMoveName').innerText = data.specialMove.name;
-            document.getElementById('specialMoveType').innerText = data.specialMove.type;
-
-            // Transition Dialogue
-            const dialogBox = document.getElementById('dialogueContainer');
-            dialogBox.classList.remove('opacity-0', 'pointer-events-none');
-            document.getElementById('speakerTag').innerText = "Prof. Oak";
-            document.getElementById('dialogueText').innerText = `Wonderful choice! ${data.name} is now your partner. Click Next to enter Pallet Town!`;
-
-            document.getElementById('nextDialogueBtn').onclick = () => {
-                soundSynth.playFanfare();
-                startFreeRoamMode();
-            };
-        };
-
-        function startFreeRoamMode() {
-            gameState = 'FREE_ROAM';
-
-            document.getElementById('dialogueContainer').classList.add('opacity-0', 'pointer-events-none');
-            document.getElementById('hudOverlay').classList.remove('opacity-0');
-            document.getElementById('crosshair').classList.remove('hidden');
-
-            player.position.set(0, 1.6, -18);
-            camera.position.copy(player.position);
-
-            document.getElementById('gameCanvas').requestPointerLock();
-        }
-
-        function updatePlayerMovement() {
-            if (gameState !== 'FREE_ROAM') return;
-
-            // Gravity
-            if (!player.isGrounded) {
-                player.velocity.y -= 0.008;
-                player.position.y += player.velocity.y;
-                if (player.position.y <= 1.6) {
-                    player.position.y = 1.6;
-                    player.isGrounded = true;
-                    player.velocity.y = 0;
-                }
-            }
-
-            if (!isPointerLocked) return;
-
-            const speed = keys['ShiftLeft'] || keys['ShiftRight'] ? player.runSpeed : player.speed;
-            const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), player.rotation.y);
-            const side = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), player.rotation.y);
-            const moveDir = new THREE.Vector3();
-
-            if (keys['KeyW']) moveDir.add(forward);
-            if (keys['KeyS']) moveDir.sub(forward);
-            if (keys['KeyA']) moveDir.sub(side);
-            if (keys['KeyD']) moveDir.add(side);
-
-            if (moveDir.lengthSq() > 0) {
-                moveDir.normalize();
-                player.position.addScaledVector(moveDir, speed);
-                checkGrassStep();
-            }
-
-            camera.position.copy(player.position);
-            camera.rotation.copy(player.rotation);
-
-            // Follower Pokémon companion lerp logic
-            if (playerCompanionMesh) {
-                const followTarget = player.position.clone().add(forward.clone().multiplyScalar(-2.2)).add(side.clone().multiplyScalar(1.0));
-                followTarget.y = 0;
-                playerCompanionMesh.position.lerp(followTarget, 0.08);
-                playerCompanionMesh.lookAt(player.position.x, playerCompanionMesh.position.y, player.position.z);
-            }
-        }
-
-        function checkGrassStep() {
-            let inAnyGrass = false;
-            grassPatches.forEach(patch => {
-                const dist = Math.hypot(player.position.x - patch.x, player.position.z - patch.z);
-                if (dist < patch.radius) {
-                    inAnyGrass = true;
-                }
-            });
-
-            if (inAnyGrass) {
-                player.stepCounter++;
-                if (player.stepCounter > 110 && Math.random() < 0.016) {
-                    player.stepCounter = 0;
-                    triggerWildEncounter();
-                }
-            }
-        }
-
-        function triggerWildEncounter() {
-            gameState = 'BATTLE';
-            document.exitPointerLock();
-
-            const flash = document.getElementById('flashOverlay');
-            flash.classList.remove('hidden');
-            flash.classList.add('encounter-flash');
-
-            soundSynth.playAttackSound();
-
-            setTimeout(() => {
-                flash.classList.add('hidden');
-                flash.classList.remove('encounter-flash');
-
-                currentWildEnemy = { ...wildEnemies[Math.floor(Math.random() * wildEnemies.length)] };
-                currentWildEnemy.hp = currentWildEnemy.maxHp;
-
-                if (wildPokemonMesh) scene.remove(wildPokemonMesh);
-                wildPokemonMesh = createPokemonMesh(currentWildEnemy.type);
-                wildPokemonMesh.position.set(0, 0, player.position.z - 8);
-                wildPokemonMesh.scale.set(1.4, 1.4, 1.4);
-                scene.add(wildPokemonMesh);
-
-                document.getElementById('enemyName').innerText = currentWildEnemy.name;
-                document.getElementById('enemyLevel').innerText = `Lv. ${currentWildEnemy.level}`;
-                document.getElementById('enemyHpText').innerText = `${currentWildEnemy.hp}/${currentWildEnemy.maxHp}`;
-                document.getElementById('enemyHpBar').style.width = '100%';
-
-                document.getElementById('battlePlayerName').innerText = player.stats.name;
-                document.getElementById('battlePlayerHpText').innerText = `${player.stats.hp}/${player.stats.maxHp}`;
-                document.getElementById('battlePlayerHpBar').style.width = `${(player.stats.hp / player.stats.maxHp) * 100}%`;
-
-                document.getElementById('battleModal').classList.remove('hidden');
-                document.getElementById('crosshair').classList.add('hidden');
-            }, 600);
-        }
-
-        window.executePlayerMove = function(moveType) {
-            if (gameState !== 'BATTLE' || currentWildEnemy.hp <= 0) return;
-
-            soundSynth.playAttackSound();
-            let dmg = moveType === 'tackle' ? 6 : player.stats.specialMove.damage;
-            currentWildEnemy.hp = Math.max(0, currentWildEnemy.hp - dmg);
-
-            const hpPct = (currentWildEnemy.hp / currentWildEnemy.maxHp) * 100;
-            document.getElementById('enemyHpBar').style.width = `${hpPct}%`;
-            document.getElementById('enemyHpText').innerText = `${currentWildEnemy.hp}/${currentWildEnemy.maxHp}`;
-
-            if (currentWildEnemy.hp <= 0) {
-                setTimeout(() => {
-                    soundSynth.playFanfare();
-                    endBattle(true);
-                }, 500);
-            } else {
-                setTimeout(() => {
-                    soundSynth.playAttackSound();
-                    const enemyDmg = 4;
-                    player.stats.hp = Math.max(0, player.stats.hp - enemyDmg);
-
-                    const p2Pct = (player.stats.hp / player.stats.maxHp) * 100;
-                    document.getElementById('battlePlayerHpBar').style.width = `${p2Pct}%`;
-                    document.getElementById('partnerHpBar').style.width = `${p2Pct}%`;
-                    document.getElementById('battlePlayerHpText').innerText = `${player.stats.hp}/${player.stats.maxHp}`;
-                    document.getElementById('partnerHpText').innerText = `${player.stats.hp}/${player.stats.maxHp}`;
-
-                    if (player.stats.hp <= 0) {
-                        player.stats.hp = player.stats.maxHp;
-                        endBattle(false);
-                    }
-                }, 800);
-            }
-        };
-
-        window.attemptCatch = function() {
-            if (gameState !== 'BATTLE') return;
-
-            soundSynth.playCatchChime();
-
-            if (battlePokeballMesh) scene.remove(battlePokeballMesh);
-            battlePokeballMesh = createPokeballMesh();
-            battlePokeballMesh.position.set(0, 1.2, player.position.z - 2);
-            scene.add(battlePokeballMesh);
-
-            let t = 0;
-            const throwAnim = setInterval(() => {
-                t += 0.08;
-                battlePokeballMesh.position.z -= 0.45;
-                battlePokeballMesh.position.y = 1.2 + Math.sin(t * Math.PI) * 1.2;
-
-                if (battlePokeballMesh.position.z <= wildPokemonMesh.position.z) {
-                    clearInterval(throwAnim);
-                    scene.remove(wildPokemonMesh);
-                    
-                    setTimeout(() => {
-                        soundSynth.playFanfare();
-                        scene.remove(battlePokeballMesh);
-                        endBattle(true);
-                    }, 800);
-                }
-            }, 30);
-        };
-
-        window.runFromBattle = function() {
-            soundSynth.playBlip();
-            endBattle(false);
-        };
-
-        function endBattle(isVictory) {
-            document.getElementById('battleModal').classList.add('hidden');
-            if (wildPokemonMesh) scene.remove(wildPokemonMesh);
-            if (battlePokeballMesh) scene.remove(battlePokeballMesh);
-
-            gameState = 'FREE_ROAM';
-            document.getElementById('crosshair').classList.remove('hidden');
-            document.getElementById('gameCanvas').requestPointerLock();
-        }
-
-        function animate(timestamp) {
-            requestAnimationFrame(animate);
-
-            if (oakMesh) {
-                oakMesh.position.y = Math.sin(timestamp * 0.003) * 0.02;
-            }
-
-            if (playerCompanionMesh && gameState === 'FREE_ROAM') {
-                playerCompanionMesh.children[0].position.y = 0.45 + Math.abs(Math.sin(timestamp * 0.008)) * 0.12;
-            }
-
-            updatePlayerMovement();
-            renderer.render(scene, camera);
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        window.onload = () => {
-            initThreeJS();
-            animate(0);
-        };
-    </script>
-</body>
-</html>
+        
+        function selectStarter(pokemonName) {
+            playerStarter = pokemonName;
+            showDialog(`You chose ${pokemonName}! A great choice. Now, go explore Route 1!`);
+            currentState = GAME_STATES.EXPLORATION;
+            
+            // Spawn follower
+            followerMesh = createPokemon(pokemonName);
+            // Place slightly behind player
+            const offset = new THREE.Vector3(0, 0, 3).applyQuaternion
