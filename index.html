@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>3D Pokémon Starter Adventure</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -36,9 +36,7 @@
             pointer-events: none;
         }
 
-        .pointer-active {
-            pointer-events: auto;
-        }
+        .pointer-active { pointer-events: auto; }
 
         #crosshair {
             position: absolute;
@@ -47,56 +45,52 @@
             transform: translate(-50%, -50%);
             width: 10px;
             height: 10px;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255,255,255,0.8);
             border-radius: 50%;
-            border: 2px solid rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(0,0,0,0.5);
             display: none;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 10px rgba(255,255,255,0.8);
         }
 
         .glass-panel {
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(15,23,42,0.85);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
 
         .hp-bar-bg {
-            background: rgba(51, 65, 85, 0.8);
+            background: rgba(51,65,85,0.8);
             height: 14px;
             border-radius: 7px;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         .hp-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, #22c55e, #4ade80);
+            background: linear-gradient(90deg,#22c55e,#4ade80);
             width: 100%;
             transition: width 0.4s ease, background 0.3s;
         }
 
         @keyframes pulse-glow {
-            0%, 100% { opacity: 0.6; transform: scale(1); }
+            0%,100% { opacity: 0.6; transform: scale(1); }
             50% { opacity: 1; transform: scale(1.05); }
         }
-
-        .animate-glow {
-            animation: pulse-glow 2s infinite ease-in-out;
-        }
+        .animate-glow { animation: pulse-glow 2s infinite ease-in-out; }
     </style>
 
     <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-            }
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
         }
+    }
     </script>
 </head>
 <body>
-
     <div id="canvas-container"></div>
 
     <div id="ui-overlay">
@@ -105,9 +99,7 @@
                 <div class="inline-block bg-amber-500/10 text-amber-400 font-semibold px-4 py-1.5 rounded-full text-sm mb-4 border border-amber-500/20">
                     3D Pokémon Adventure
                 </div>
-                <h1 class="text-4xl sm:text-5xl font-black text-white tracking-wider mb-4 drop-shadow-md">
-                    PALLET TOWN & BEYOND
-                </h1>
+                <h1 class="text-4xl sm:text-5xl font-black text-white tracking-wider mb-4 drop-shadow-md">PALLET TOWN & BEYOND</h1>
                 <p class="text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
                     Step into Professor Oak's lab, choose your starter Pokémon, and explore multi-regional routes with first-person WASD movement!
                 </p>
@@ -154,15 +146,9 @@
                 </div>
 
                 <div class="grid grid-cols-3 gap-3 w-full pointer-active">
-                    <button onclick="window.gameInstance.battleAction('fight')" class="py-3.5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-xl shadow-lg border border-red-400/30 transition">
-                        FIGHT
-                    </button>
-                    <button onclick="window.gameInstance.battleAction('catch')" class="py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-xl shadow-lg border border-cyan-400/30 transition">
-                        CATCH
-                    </button>
-                    <button onclick="window.gameInstance.battleAction('run')" class="py-3.5 bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white font-bold rounded-xl shadow-lg border border-slate-500/30 transition">
-                        RUN
-                    </button>
+                    <button onclick="window.gameInstance.battleAction('fight')" class="py-3.5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-xl shadow-lg border border-red-400/30 transition">FIGHT</button>
+                    <button onclick="window.gameInstance.battleAction('catch')" class="py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-xl shadow-lg border border-cyan-400/30 transition">CATCH</button>
+                    <button onclick="window.gameInstance.battleAction('run')" class="py-3.5 bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white font-bold rounded-xl shadow-lg border border-slate-500/30 transition">RUN</button>
                 </div>
             </div>
         </div>
@@ -171,735 +157,645 @@
     </div>
 
     <script type="module">
-        import * as THREE from 'three';
-        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+    import * as THREE from 'three';
+    import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-        class PokemonGame {
-            constructor() {
-                this.state = 'INTRO';
-                this.currentRegion = 'Pallet Town';
-                this.playerStarter = null;
-                this.followerMesh = null;
-                this.interactables = [];
-                this.encounterZones = [];
-                this.portals = [];
-                this.animatedSpawns = [];
-                this.spawnedWilds = [];
-                this.lastWildSpawnTime = 0;
+    class PokemonGame {
+        constructor() {
+            this.state = 'INTRO';
+            this.currentRegion = 'Pallet Town';
+            this.playerStarter = null;
+            this.followerMesh = null;
+            this.interactables = [];
+            this.encounterZones = [];
+            this.portals = [];
+            this.animatedSpawns = [];
+            this.spawnedWilds = [];
+            this.lastWildSpawnTime = 0;
 
-                this.wildMesh = null;
-                this.wildHP = 100;
-                this.playerHP = 100;
-                this.preBattleCamPos = new THREE.Vector3();
-                this.preBattleCamRot = new THREE.Euler();
+            this.wildMesh = null;
+            this.wildHP = 100;
+            this.playerHP = 100;
+            this.preBattleCamPos = new THREE.Vector3();
+            this.preBattleCamRot = new THREE.Euler();
 
-                this.velocity = new THREE.Vector3();
-                this.direction = new THREE.Vector3();
-                this.move = { forward: false, backward: false, left: false, right: false, sprint: false };
-                this.canJump = true;
-                this.prevTime = performance.now();
+            this.velocity = new THREE.Vector3();
+            this.direction = new THREE.Vector3();
+            this.move = { forward: false, backward: false, left: false, right: false, sprint: false };
+            this.canJump = true;
+            this.prevTime = performance.now();
 
-                this.initUI();
-                this.initEngine();
-                this.initLights();
-                this.initEnvironment();
-                this.initControls();
-                this.animate();
-            }
+            this.initUI();
+            this.initEngine();
+            this.initLights();
+            this.initEnvironment();
+            this.initControls();
+            this.animate();
+        }
 
-            initUI() {
-                this.ui = {
-                    startScreen: document.getElementById('start-screen'),
-                    btnStart: document.getElementById('btn-start-game'),
-                    crosshair: document.getElementById('crosshair'),
-                    locationName: document.getElementById('location-name'),
-                    dialogueBox: document.getElementById('dialogue-box'),
-                    dialogueText: document.getElementById('dialogue-text'),
-                    dialogueSpeaker: document.getElementById('dialogue-speaker'),
-                    battleUI: document.getElementById('battle-ui'),
-                    flash: document.getElementById('flash-effect'),
-                    enemyName: document.getElementById('enemy-name'),
-                    playerName: document.getElementById('player-name'),
-                    enemyHPBar: document.getElementById('enemy-hp-bar'),
-                    playerHPBar: document.getElementById('player-hp-bar')
-                };
+        initUI() {
+            this.ui = {
+                startScreen: document.getElementById('start-screen'),
+                btnStart: document.getElementById('btn-start-game'),
+                crosshair: document.getElementById('crosshair'),
+                locationName: document.getElementById('location-name'),
+                dialogueBox: document.getElementById('dialogue-box'),
+                dialogueText: document.getElementById('dialogue-text'),
+                dialogueSpeaker: document.getElementById('dialogue-speaker'),
+                battleUI: document.getElementById('battle-ui'),
+                flash: document.getElementById('flash-effect'),
+                enemyName: document.getElementById('enemy-name'),
+                playerName: document.getElementById('player-name'),
+                enemyHPBar: document.getElementById('enemy-hp-bar'),
+                playerHPBar: document.getElementById('player-hp-bar')
+            };
 
-                this.ui.btnStart.addEventListener('click', (event) => {
-                    event.preventDefault();
+            this.ui.btnStart.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.ui.startScreen.style.opacity = '0';
+                setTimeout(() => { this.ui.startScreen.style.display = 'none'; }, 500);
 
-                    this.ui.startScreen.style.opacity = '0';
-                    setTimeout(() => {
-                        this.ui.startScreen.style.display = 'none';
-                    }, 500);
-
-                    try {
-                        if (this.controls && typeof this.controls.lock === 'function') {
-                            this.controls.lock();
-                        }
-                    } catch (error) {
-                        console.error('Pointer lock failed:', error);
+                try {
+                    if (this.controls && typeof this.controls.lock === 'function') {
+                        this.controls.lock();
                     }
-                });
+                } catch (error) {
+                    console.error('Pointer lock failed:', error);
+                }
+            });
 
-                this.ui.btnStart.addEventListener('touchstart', (event) => {
-                    event.preventDefault();
-                    this.ui.btnStart.click();
-                }, { passive: false });
-            }
+            this.ui.btnStart.addEventListener('touchstart', (event) => {
+                event.preventDefault();
+                this.ui.btnStart.click();
+            }, { passive: false });
+        }
 
-            initEngine() {
-                this.container = document.getElementById('canvas-container');
-                this.scene = new THREE.Scene();
-                this.scene.background = new THREE.Color(0x38bdf8);
-                this.scene.fog = new THREE.FogExp2(0x38bdf8, 0.012);
+        initEngine() {
+            this.container = document.getElementById('canvas-container');
+            this.scene = new THREE.Scene();
+            this.scene.background = new THREE.Color(0x38bdf8);
+            this.scene.fog = new THREE.FogExp2(0x38bdf8, 0.012);
 
-                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                this.camera.position.set(0, 2, 8);
+            this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            this.camera.position.set(0, 2, 8);
 
-                this.renderer = new THREE.WebGLRenderer({
-                    antialias: true,
-                    powerPreference: "high-performance"
-                });
+            this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            this.renderer.shadowMap.enabled = true;
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+            this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            this.renderer.toneMappingExposure = 1.15;
+            this.container.appendChild(this.renderer.domElement);
+
+            window.addEventListener('resize', () => {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                this.renderer.shadowMap.enabled = true;
-                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            });
+        }
 
-                this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1.15;
-                this.container.appendChild(this.renderer.domElement);
+        initLights() {
+            const ambient = new THREE.AmbientLight(0xffffff, 0.65);
+            this.scene.add(ambient);
 
-                window.addEventListener('resize', () => {
-                    this.camera.aspect = window.innerWidth / window.innerHeight;
-                    this.camera.updateProjectionMatrix();
-                    this.renderer.setSize(window.innerWidth, window.innerHeight);
-                });
+            const sun = new THREE.DirectionalLight(0xfff7ed, 1.3);
+            sun.position.set(50, 80, 30);
+            sun.castShadow = true;
+            sun.shadow.mapSize.width = 2048;
+            sun.shadow.mapSize.height = 2048;
+            sun.shadow.camera.near = 0.5;
+            sun.shadow.camera.far = 250;
+            const d = 60;
+            sun.shadow.camera.left = -d;
+            sun.shadow.camera.right = d;
+            sun.shadow.camera.top = d;
+            sun.shadow.camera.bottom = -d;
+            this.scene.add(sun);
+        }
+
+        getMaterials() {
+            return {
+                grass: new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.9 }),
+                dirt: new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.8 }),
+                wood: new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 }),
+                labWall: new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.4 }),
+                labRoof: new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3 }),
+                pokeballRed: new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.2 }),
+                pokeballWhite: new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 }),
+                oakHair: new THREE.MeshStandardMaterial({ color: 0x94a3b8 }),
+                oakCoat: new THREE.MeshStandardMaterial({ color: 0xf8fafc }),
+                water: new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1, transparent: true, opacity: 0.8 })
+            };
+        }
+
+        createPokeball(starterName) {
+            const group = new THREE.Group();
+            const mats = this.getMaterials();
+
+            const top = new THREE.Mesh(new THREE.SphereGeometry(0.35, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), mats.pokeballRed);
+            top.castShadow = true;
+            group.add(top);
+
+            const bot = new THREE.Mesh(new THREE.SphereGeometry(0.35, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), mats.pokeballWhite);
+            bot.castShadow = true;
+            group.add(bot);
+
+            const band = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.03, 16, 32), new THREE.MeshStandardMaterial({ color: 0x0f172a }));
+            band.rotation.x = Math.PI / 2;
+            group.add(band);
+
+            const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.06, 16), mats.pokeballWhite);
+            btn.rotation.x = Math.PI / 2;
+            btn.position.z = 0.35;
+            group.add(btn);
+
+            const hitMesh = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), new THREE.MeshBasicMaterial({ visible: false }));
+            hitMesh.userData = { starter: starterName };
+            group.add(hitMesh);
+            this.interactables.push(hitMesh);
+
+            return group;
+        }
+
+        createPokemonMesh(name) {
+            const group = new THREE.Group();
+            let mat, extraMat, mainGeo;
+
+            switch(name.toLowerCase()) {
+                case 'bulbasaur':
+                    mat = new THREE.MeshStandardMaterial({ color: 0x0d9488 });
+                    extraMat = new THREE.MeshStandardMaterial({ color: 0x16a34a });
+                    mainGeo = new THREE.BoxGeometry(0.8, 0.6, 1.0);
+                    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 16), extraMat);
+                    bulb.position.set(0, 0.5, -0.1);
+                    group.add(bulb);
+                    break;
+
+                case 'charmander':
+                    mat = new THREE.MeshStandardMaterial({ color: 0xe11d48 });
+                    extraMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706 });
+                    mainGeo = new THREE.CylinderGeometry(0.35, 0.45, 1.0, 16);
+                    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.4, 12), extraMat);
+                    flame.position.set(0, 0, -0.6);
+                    flame.rotation.x = -Math.PI / 3;
+                    group.add(flame);
+                    break;
+
+                case 'squirtle':
+                    mat = new THREE.MeshStandardMaterial({ color: 0x0284c7 });
+                    extraMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
+                    mainGeo = new THREE.BoxGeometry(0.75, 0.9, 0.75);
+                    const shell = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.3, 16), extraMat);
+                    shell.rotation.x = Math.PI / 2;
+                    shell.position.z = -0.4;
+                    group.add(shell);
+                    break;
+
+                case 'alolan vulpix':
+                    mat = new THREE.MeshStandardMaterial({ color: 0xf8fafc });
+                    extraMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.2 });
+                    mainGeo = new THREE.BoxGeometry(0.65, 0.7, 0.8);
+                    const tuft = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), extraMat);
+                    tuft.position.set(0, 0.5, 0.2);
+                    group.add(tuft);
+                    break;
+
+                case 'galarian slowpoke':
+                    mat = new THREE.MeshStandardMaterial({ color: 0xf472b6 });
+                    extraMat = new THREE.MeshStandardMaterial({ color: 0xeab308 });
+                    mainGeo = new THREE.BoxGeometry(1.0, 0.55, 1.2);
+                    const forehead = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), extraMat);
+                    forehead.position.set(0, 0.35, 0.6);
+                    group.add(forehead);
+                    break;
+
+                default:
+                    mat = new THREE.MeshStandardMaterial({ color: name === 'pikachu' ? 0xeab308 : (name === 'rattata' ? 0x9333ea : 0xa16207) });
+                    mainGeo = new THREE.BoxGeometry(0.7, 0.7, 0.7);
             }
 
-            initLights() {
-                const ambient = new THREE.AmbientLight(0xffffff, 0.65);
-                this.scene.add(ambient);
+            const body = new THREE.Mesh(mainGeo, mat);
+            body.castShadow = true;
+            body.receiveShadow = true;
+            body.position.y = 0.4;
+            group.add(body);
 
-                const sun = new THREE.DirectionalLight(0xfff7ed, 1.3);
-                sun.position.set(50, 80, 30);
-                sun.castShadow = true;
-                sun.shadow.mapSize.width = 2048;
-                sun.shadow.mapSize.height = 2048;
-                sun.shadow.camera.near = 0.5;
-                sun.shadow.camera.far = 250;
-                const d = 60;
-                sun.shadow.camera.left = -d;
-                sun.shadow.camera.right = d;
-                sun.shadow.camera.top = d;
-                sun.shadow.camera.bottom = -d;
-                this.scene.add(sun);
-            }
+            group.userData = { name: name, baseScale: 1.0 };
+            return group;
+        }
 
-            getMaterials() {
-                return {
-                    grass: new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.9 }),
-                    dirt: new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.8 }),
-                    wood: new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 }),
-                    labWall: new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.4 }),
-                    labRoof: new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3 }),
-                    pokeballRed: new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.2 }),
-                    pokeballWhite: new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 }),
-                    oakHair: new THREE.MeshStandardMaterial({ color: 0x94a3b8 }),
-                    oakCoat: new THREE.MeshStandardMaterial({ color: 0xf8fafc }),
-                    water: new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1, transparent: true, opacity: 0.8 })
-                };
-            }
+        initEnvironment() {
+            const mats = this.getMaterials();
 
-            createPokeball(starterName) {
-                const group = new THREE.Group();
-                const mats = this.getMaterials();
+            const mainGround = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), mats.grass);
+            mainGround.rotation.x = -Math.PI / 2;
+            mainGround.receiveShadow = true;
+            this.scene.add(mainGround);
 
-                const top = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.35, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2),
-                    mats.pokeballRed
+            const labGroup = new THREE.Group();
+            const labBuilding = new THREE.Mesh(new THREE.BoxGeometry(14, 7, 10), mats.labWall);
+            labBuilding.position.set(0, 3.5, -12);
+            labBuilding.castShadow = labBuilding.receiveShadow = true;
+            labGroup.add(labBuilding);
+
+            const labRoof = new THREE.Mesh(new THREE.ConeGeometry(11, 4, 4), mats.labRoof);
+            labRoof.position.set(0, 9, -12);
+            labRoof.rotation.y = Math.PI / 4;
+            labGroup.add(labRoof);
+
+            const table = new THREE.Mesh(new THREE.BoxGeometry(6, 1.2, 2.5), mats.wood);
+            table.position.set(0, 0.6, -5);
+            table.castShadow = table.receiveShadow = true;
+            labGroup.add(table);
+
+            const bulbaBall = this.createPokeball('Bulbasaur');
+            bulbaBall.position.set(-1.8, 1.5, -5);
+            labGroup.add(bulbaBall);
+
+            const charBall = this.createPokeball('Charmander');
+            charBall.position.set(0, 1.5, -5);
+            labGroup.add(charBall);
+
+            const squirtBall = this.createPokeball('Squirtle');
+            squirtBall.position.set(1.8, 1.5, -5);
+            labGroup.add(squirtBall);
+
+            const oakMesh = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.45, 1.8), mats.oakCoat);
+            body.position.y = 0.9;
+            oakMesh.add(body);
+
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.35), mats.oakHair);
+            head.position.y = 2.0;
+            oakMesh.add(head);
+
+            oakMesh.position.set(0, 0, -7.5);
+            labGroup.add(oakMesh);
+            this.scene.add(labGroup);
+
+            const path = new THREE.Mesh(new THREE.PlaneGeometry(8, 140), mats.dirt);
+            path.rotation.x = -Math.PI / 2;
+            path.position.set(0, 0.02, 60);
+            path.receiveShadow = true;
+            this.scene.add(path);
+
+            this.createGrassZone(-18, -6, 20, 70, "Route 1", ['Pidgey', 'Rattata']);
+            this.createGrassZone(6, 18, 30, 90, "Route 1", ['Pikachu', 'Pidgey']);
+
+            const alolaGround = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), mats.dirt);
+            alolaGround.rotation.x = -Math.PI / 2;
+            alolaGround.position.set(600, 0.03, 0);
+            alolaGround.receiveShadow = true;
+            this.scene.add(alolaGround);
+            this.createGrassZone(560, 640, -40, 40, "Alola Region", ['Alolan Vulpix', 'Pidgey']);
+
+            const galarGround = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.MeshStandardMaterial({ color: 0x0f766e }));
+            galarGround.rotation.x = -Math.PI / 2;
+            galarGround.position.set(-600, 0.03, 0);
+            galarGround.receiveShadow = true;
+            this.scene.add(galarGround);
+            this.createGrassZone(-640, -560, -40, 40, "Galar Region", ['Galarian Slowpoke', 'Rattata']);
+
+            this.createPortal(-22, 0, 15, 600, 0, 30, 0x06b6d4);
+            this.createPortal(22, 0, 15, -600, 0, 30, 0xa855f7);
+            this.createPortal(600, 0, 50, 0, 0, 20, 0xf59e0b);
+            this.createPortal(-600, 0, 50, 0, 0, 20, 0xf59e0b);
+        }
+
+        createGrassZone(xMin, xMax, zMin, zMax, regionName, pool) {
+            this.encounterZones.push({ xMin, xMax, zMin, zMax, regionName, pool });
+
+            const count = Math.floor(Math.abs(xMax - xMin) * Math.abs(zMax - zMin) * 0.5);
+            const geo = new THREE.BoxGeometry(0.2, 1.2, 0.2);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.9 });
+            const instanced = new THREE.InstancedMesh(geo, mat, count);
+
+            const dummy = new THREE.Object3D();
+            for (let i = 0; i < count; i++) {
+                dummy.position.set(
+                    xMin + Math.random() * (xMax - xMin),
+                    0.6,
+                    zMin + Math.random() * (zMax - zMin)
                 );
-                top.castShadow = true;
-                group.add(top);
-
-                const bot = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.35, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2),
-                    mats.pokeballWhite
-                );
-                bot.castShadow = true;
-                group.add(bot);
-
-                const band = new THREE.Mesh(
-                    new THREE.TorusGeometry(0.35, 0.03, 16, 32),
-                    new THREE.MeshStandardMaterial({ color: 0x0f172a })
-                );
-                band.rotation.x = Math.PI / 2;
-                group.add(band);
-
-                const btn = new THREE.Mesh(
-                    new THREE.CylinderGeometry(0.08, 0.08, 0.06, 16),
-                    mats.pokeballWhite
-                );
-                btn.rotation.x = Math.PI / 2;
-                btn.position.z = 0.35;
-                group.add(btn);
-
-                const hitMesh = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.5, 16, 16),
-                    new THREE.MeshBasicMaterial({ visible: false })
-                );
-                hitMesh.userData = { starter: starterName };
-                group.add(hitMesh);
-                this.interactables.push(hitMesh);
-
-                return group;
+                dummy.rotation.y = Math.random() * Math.PI;
+                dummy.updateMatrix();
+                instanced.setMatrixAt(i, dummy.matrix);
             }
+            instanced.castShadow = true;
+            this.scene.add(instanced);
+        }
 
-            createPokemonMesh(name) {
-                const group = new THREE.Group();
-                let mat, extraMat, mainGeo;
+        createPortal(sx, sy, sz, dx, dy, dz, colorHex) {
+            const group = new THREE.Group();
+            group.position.set(sx, sy + 2, sz);
 
-                switch (name.toLowerCase()) {
-                    case 'bulbasaur':
-                        mat = new THREE.MeshStandardMaterial({ color: 0x0d9488 });
-                        extraMat = new THREE.MeshStandardMaterial({ color: 0x16a34a });
-                        mainGeo = new THREE.BoxGeometry(0.8, 0.6, 1.0);
+            const torus = new THREE.Mesh(new THREE.TorusGeometry(2.0, 0.25, 16, 32), new THREE.MeshBasicMaterial({ color: colorHex }));
+            group.add(torus);
 
-                        const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 16), extraMat);
-                        bulb.position.set(0, 0.5, -0.1);
-                        group.add(bulb);
-                        break;
+            const light = new THREE.PointLight(colorHex, 4, 18);
+            group.add(light);
 
-                    case 'charmander':
-                        mat = new THREE.MeshStandardMaterial({ color: 0xe11d48 });
-                        extraMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706 });
-                        mainGeo = new THREE.CylinderGeometry(0.35, 0.45, 1.0, 16);
+            this.scene.add(group);
+            this.portals.push({ mesh: group, target: new THREE.Vector3(dx, dy, dz) });
+        }
 
-                        const flame = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.4, 12), extraMat);
-                        flame.position.set(0, 0, -0.6);
-                        flame.rotation.x = -Math.PI / 3;
-                        group.add(flame);
-                        break;
+        spawnWildPokemon(species, x, z) {
+            const mesh = this.createPokemonMesh(species);
+            mesh.position.set(x, -2, z);
+            mesh.scale.setScalar(1.2);
 
-                    case 'squirtle':
-                        mat = new THREE.MeshStandardMaterial({ color: 0x0284c7 });
-                        extraMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
-                        mainGeo = new THREE.BoxGeometry(0.75, 0.9, 0.75);
+            mesh.userData = { ...mesh.userData, isWild: true, species: species };
 
-                        const shell = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.3, 16), extraMat);
-                        shell.rotation.x = Math.PI / 2;
-                        shell.position.z = -0.4;
-                        group.add(shell);
-                        break;
+            this.scene.add(mesh);
 
-                    case 'alolan vulpix':
-                        mat = new THREE.MeshStandardMaterial({ color: 0xf8fafc });
-                        extraMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.2 });
-                        mainGeo = new THREE.BoxGeometry(0.65, 0.7, 0.8);
+            this.spawnedWilds.push({
+                mesh,
+                species,
+                targetY: 0.4,
+                startTime: performance.now(),
+                duration: 700,
+                active: false
+            });
+        }
 
-                        const tuft = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), extraMat);
-                        tuft.position.set(0, 0.5, 0.2);
-                        group.add(tuft);
-                        break;
+        trySpawnWildPokemon() {
+            if (this.state !== 'EXPLORE' || !this.controls.isLocked) return;
 
-                    case 'galarian slowpoke':
-                        mat = new THREE.MeshStandardMaterial({ color: 0xf472b6 });
-                        extraMat = new THREE.MeshStandardMaterial({ color: 0xeab308 });
-                        mainGeo = new THREE.BoxGeometry(1.0, 0.55, 1.2);
+            const now = performance.now();
+            if (now - this.lastWildSpawnTime < 1800) return;
+            this.lastWildSpawnTime = now;
 
-                        const forehead = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), extraMat);
-                        forehead.position.set(0, 0.35, 0.6);
-                        group.add(forehead);
-                        break;
+            const pos = this.camera.position;
 
-                    default:
-                        mat = new THREE.MeshStandardMaterial({
-                            color: name === 'pikachu' ? 0xeab308 : (name === 'rattata' ? 0x9333ea : 0xa16207)
-                        });
-                        mainGeo = new THREE.BoxGeometry(0.7, 0.7, 0.7);
-                }
+            for (const zone of this.encounterZones) {
+                const inZone =
+                    pos.x >= zone.xMin && pos.x <= zone.xMax &&
+                    pos.z >= zone.zMin && pos.z <= zone.zMax;
 
-                const body = new THREE.Mesh(mainGeo, mat);
-                body.castShadow = true;
-                body.receiveShadow = true;
-                body.position.y = 0.4;
-                group.add(body);
+                if (!inZone) continue;
 
-                group.userData = { name: name, baseScale: 1.0 };
-                return group;
-            }
+                const spawnX = zone.xMin + Math.random() * (zone.xMax - zone.xMin);
+                const spawnZ = zone.zMin + Math.random() * (zone.zMax - zone.zMin);
+                const dist = Math.hypot(spawnX - pos.x, spawnZ - pos.z);
 
-            initEnvironment() {
-                const mats = this.getMaterials();
+                if (dist < 8 || dist > 30) continue;
 
-                const mainGround = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), mats.grass);
-                mainGround.rotation.x = -Math.PI / 2;
-                mainGround.receiveShadow = true;
-                this.scene.add(mainGround);
-
-                const labGroup = new THREE.Group();
-                const labBuilding = new THREE.Mesh(new THREE.BoxGeometry(14, 7, 10), mats.labWall);
-                labBuilding.position.set(0, 3.5, -12);
-                labBuilding.castShadow = labBuilding.receiveShadow = true;
-                labGroup.add(labBuilding);
-
-                const labRoof = new THREE.Mesh(new THREE.ConeGeometry(11, 4, 4), mats.labRoof);
-                labRoof.position.set(0, 9, -12);
-                labRoof.rotation.y = Math.PI / 4;
-                labGroup.add(labRoof);
-
-                const table = new THREE.Mesh(new THREE.BoxGeometry(6, 1.2, 2.5), mats.wood);
-                table.position.set(0, 0.6, -5);
-                table.castShadow = table.receiveShadow = true;
-                labGroup.add(table);
-
-                const bulbaBall = this.createPokeball('Bulbasaur');
-                bulbaBall.position.set(-1.8, 1.5, -5);
-                labGroup.add(bulbaBall);
-
-                const charBall = this.createPokeball('Charmander');
-                charBall.position.set(0, 1.5, -5);
-                labGroup.add(charBall);
-
-                const squirtBall = this.createPokeball('Squirtle');
-                squirtBall.position.set(1.8, 1.5, -5);
-                labGroup.add(squirtBall);
-
-                const oakMesh = new THREE.Group();
-                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.45, 1.8), mats.oakCoat);
-                body.position.y = 0.9;
-                oakMesh.add(body);
-
-                const head = new THREE.Mesh(new THREE.SphereGeometry(0.35), mats.oakHair);
-                head.position.y = 2.0;
-                oakMesh.add(head);
-
-                oakMesh.position.set(0, 0, -7.5);
-                labGroup.add(oakMesh);
-                this.scene.add(labGroup);
-
-                const path = new THREE.Mesh(new THREE.PlaneGeometry(8, 140), mats.dirt);
-                path.rotation.x = -Math.PI / 2;
-                path.position.set(0, 0.02, 60);
-                path.receiveShadow = true;
-                this.scene.add(path);
-
-                this.createGrassZone(-18, -6, 20, 70, "Route 1", ['Pidgey', 'Rattata']);
-                this.createGrassZone(6, 18, 30, 90, "Route 1", ['Pikachu', 'Pidgey']);
-
-                const alolaGround = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), mats.dirt);
-                alolaGround.rotation.x = -Math.PI / 2;
-                alolaGround.position.set(600, 0.03, 0);
-                alolaGround.receiveShadow = true;
-                this.scene.add(alolaGround);
-                this.createGrassZone(560, 640, -40, 40, "Alola Region", ['Alolan Vulpix', 'Pidgey']);
-
-                const galarGround = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.MeshStandardMaterial({ color: 0x0f766e }));
-                galarGround.rotation.x = -Math.PI / 2;
-                galarGround.position.set(-600, 0.03, 0);
-                galarGround.receiveShadow = true;
-                this.scene.add(galarGround);
-                this.createGrassZone(-640, -560, -40, 40, "Galar Region", ['Galarian Slowpoke', 'Rattata']);
-
-                this.createPortal(-22, 0, 15, 600, 0, 30, 0x06b6d4);
-                this.createPortal(22, 0, 15, -600, 0, 30, 0xa855f7);
-                this.createPortal(600, 0, 50, 0, 0, 20, 0xf59e0b);
-                this.createPortal(-600, 0, 50, 0, 0, 20, 0xf59e0b);
-            }
-
-            createGrassZone(xMin, xMax, zMin, zMax, regionName, pool) {
-                this.encounterZones.push({ xMin, xMax, zMin, zMax, regionName, pool });
-
-                const count = Math.floor(Math.abs(xMax - xMin) * Math.abs(zMax - zMin) * 0.5);
-                const geo = new THREE.BoxGeometry(0.2, 1.2, 0.2);
-                const mat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.9 });
-                const instanced = new THREE.InstancedMesh(geo, mat, count);
-
-                const dummy = new THREE.Object3D();
-                for (let i = 0; i < count; i++) {
-                    dummy.position.set(
-                        xMin + Math.random() * (xMax - xMin),
-                        0.6,
-                        zMin + Math.random() * (zMax - zMin)
-                    );
-                    dummy.rotation.y = Math.random() * Math.PI;
-                    dummy.updateMatrix();
-                    instanced.setMatrixAt(i, dummy.matrix);
-                }
-                instanced.castShadow = true;
-                this.scene.add(instanced);
-            }
-
-            createPortal(sx, sy, sz, dx, dy, dz, colorHex) {
-                const group = new THREE.Group();
-                group.position.set(sx, sy + 2, sz);
-
-                const torus = new THREE.Mesh(
-                    new THREE.TorusGeometry(2.0, 0.25, 16, 32),
-                    new THREE.MeshBasicMaterial({ color: colorHex })
-                );
-                group.add(torus);
-
-                const light = new THREE.PointLight(colorHex, 4, 18);
-                group.add(light);
-
-                this.scene.add(group);
-                this.portals.push({ mesh: group, target: new THREE.Vector3(dx, dy, dz) });
-            }
-
-            spawnWildPokemon(species, x, z) {
-                const mesh = this.createPokemonMesh(species);
-                mesh.position.set(x, -2, z);
-                mesh.scale.setScalar(1.2);
-
-                mesh.userData = {
-                    ...mesh.userData,
-                    isWild: true,
-                    species: species
-                };
-
-                this.scene.add(mesh);
-
-                this.spawnedWilds.push({
-                    mesh,
-                    species,
-                    targetY: 0.4,
-                    startTime: performance.now(),
-                    duration: 700,
-                    active: false
-                });
-            }
-
-            trySpawnWildPokemon() {
-                if (this.state !== 'EXPLORE' || !this.controls.isLocked) return;
-
-                const now = performance.now();
-                if (now - this.lastWildSpawnTime < 1800) return;
-                this.lastWildSpawnTime = now;
-
-                const pos = this.camera.position;
-
-                for (const zone of this.encounterZones) {
-                    const inZone =
-                        pos.x >= zone.xMin && pos.x <= zone.xMax &&
-                        pos.z >= zone.zMin && pos.z <= zone.zMax;
-
-                    if (!inZone) continue;
-
-                    const spawnX = zone.xMin + Math.random() * (zone.xMax - zone.xMin);
-                    const spawnZ = zone.zMin + Math.random() * (zone.zMax - zone.zMin);
-                    const dist = Math.hypot(spawnX - pos.x, spawnZ - pos.z);
-
-                    if (dist < 8 || dist > 30) continue;
-
-                    const species = zone.pool[Math.floor(Math.random() * zone.pool.length)];
-                    const tooClose = this.spawnedWilds.some(w => {
-                        return w.mesh.position.distanceTo(new THREE.Vector3(spawnX, 0.4, spawnZ)) < 3;
-                    });
-
-                    if (!tooClose) {
-                        this.spawnWildPokemon(species, spawnX, spawnZ);
-                        return;
-                    }
-                }
-            }
-
-            initControls() {
-                this.controls = new PointerLockControls(this.camera, this.renderer.domElement);
-
-                this.controls.addEventListener('lock', () => {
-                    this.ui.crosshair.style.display = 'block';
-                    if (this.state === 'INTRO') {
-                        this.showDialogue("Prof. Oak", "Welcome! Step forward and pick a Poké Ball from the table to choose your starter!");
-                    }
+                const species = zone.pool[Math.floor(Math.random() * zone.pool.length)];
+                const tooClose = this.spawnedWilds.some(w => {
+                    return w.mesh.position.distanceTo(new THREE.Vector3(spawnX, 0.4, spawnZ)) < 3;
                 });
 
-                this.controls.addEventListener('unlock', () => {
-                    this.ui.crosshair.style.display = 'none';
-                    if (this.state !== 'BATTLE') {
-                        this.ui.startScreen.style.display = 'flex';
-                        this.ui.startScreen.style.opacity = '1';
-                    }
-                });
-
-                document.addEventListener('keydown', (e) => this.onKey(e, true));
-                document.addEventListener('keyup', (e) => this.onKey(e, false));
-
-                const raycaster = new THREE.Raycaster();
-                document.addEventListener('mousedown', () => {
-                    if (!this.controls.isLocked) return;
-
-                    if (this.state === 'INTRO') {
-                        raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
-                        const hits = raycaster.intersectObjects(this.interactables);
-                        if (hits.length > 0) {
-                            const starter = hits[0].object.userData.starter;
-                            if (starter) this.selectStarter(starter);
-                        }
-                    }
-                });
-            }
-
-            onKey(e, isDown) {
-                switch (e.code) {
-                    case 'KeyW':
-                    case 'ArrowUp':
-                        this.move.forward = isDown;
-                        break;
-                    case 'KeyS':
-                    case 'ArrowDown':
-                        this.move.backward = isDown;
-                        break;
-                    case 'KeyA':
-                    case 'ArrowLeft':
-                        this.move.left = isDown;
-                        break;
-                    case 'KeyD':
-                    case 'ArrowRight':
-                        this.move.right = isDown;
-                        break;
-                    case 'ShiftLeft':
-                    case 'ShiftRight':
-                        this.move.sprint = isDown;
-                        break;
-                    case 'Space':
-                        if (isDown && this.canJump && this.controls.isLocked) {
-                            this.velocity.y += 12;
-                            this.canJump = false;
-                        }
-                        break;
-                }
-            }
-
-            showDialogue(speaker, text, duration = 4000) {
-                this.ui.dialogueSpeaker.innerText = speaker;
-                this.ui.dialogueText.innerText = text;
-                this.ui.dialogueBox.style.display = 'block';
-
-                if (duration > 0) {
-                    setTimeout(() => {
-                        this.ui.dialogueBox.style.display = 'none';
-                    }, duration);
-                }
-            }
-
-            selectStarter(name) {
-                this.playerStarter = name;
-                this.showDialogue("Prof. Oak", `Ah! ${name} is a fantastic choice! Take good care of it on your journey!`);
-                this.state = 'EXPLORE';
-
-                this.followerMesh = this.createPokemonMesh(name);
-                this.followerMesh.position.copy(this.camera.position).add(new THREE.Vector3(0, -1, -3));
-                this.scene.add(this.followerMesh);
-            }
-
-            triggerEncounter(pool, wildEntity = null) {
-                const wildName = Array.isArray(pool) ? pool[Math.floor(Math.random() * pool.length)] : pool;
-
-                if (wildEntity) {
-                    const index = this.spawnedWilds.findIndex(w => w.mesh === wildEntity.mesh);
-                    if (index >= 0) this.spawnedWilds.splice(index, 1);
-                    this.scene.remove(wildEntity.mesh);
-                }
-
-                this.state = 'BATTLE';
-                this.controls.unlock();
-
-                this.ui.flash.style.opacity = '1';
-                setTimeout(() => { this.ui.flash.style.opacity = '0'; }, 200);
-
-                this.preBattleCamPos.copy(this.camera.position);
-                this.preBattleCamRot.copy(this.camera.rotation);
-
-                this.camera.position.set(0, 3.5, 9);
-                this.camera.lookAt(0, 1, 0);
-
-                this.wildMesh = this.createPokemonMesh(wildName);
-                this.wildMesh.position.set(0, -2, -1);
-                this.scene.add(this.wildMesh);
-
-                this.animatedSpawns.push({
-                    mesh: this.wildMesh,
-                    targetY: 0.4,
-                    startTime: performance.now(),
-                    duration: 600
-                });
-
-                this.wildHP = 100;
-                this.playerHP = 100;
-
-                this.ui.enemyName.innerText = `Wild ${wildName}`;
-                this.ui.playerName.innerText = this.playerStarter || 'Starter';
-                this.ui.enemyHPBar.style.width = '100%';
-                this.ui.playerHPBar.style.width = '100%';
-
-                this.ui.battleUI.style.display = 'flex';
-            }
-
-            battleAction(action) {
-                if (action === 'fight') {
-                    this.wildHP = Math.max(0, this.wildHP - (20 + Math.floor(Math.random() * 20)));
-                    this.ui.enemyHPBar.style.width = `${this.wildHP}%`;
-
-                    if (this.wildHP <= 0) {
-                        this.showDialogue("BATTLE", "Wild Pokémon fainted! Victory!", 2000);
-                        setTimeout(() => this.endBattle(), 2000);
-                        return;
-                    }
-                } else if (action === 'catch') {
-                    if (Math.random() > 0.4) {
-                        this.showDialogue("BATTLE", "Gotcha! The wild Pokémon was caught!", 2000);
-                        setTimeout(() => this.endBattle(), 2000);
-                        return;
-                    } else {
-                        this.showDialogue("BATTLE", "Oh no! It broke free!", 1500);
-                    }
-                } else if (action === 'run') {
-                    this.showDialogue("BATTLE", "Got away safely!", 1500);
-                    setTimeout(() => this.endBattle(), 1500);
+                if (!tooClose) {
+                    this.spawnWildPokemon(species, spawnX, spawnZ);
                     return;
                 }
-
-                setTimeout(() => {
-                    this.playerHP = Math.max(0, this.playerHP - (10 + Math.floor(Math.random() * 15)));
-                    this.ui.playerHPBar.style.width = `${this.playerHP}%`;
-
-                    if (this.playerHP <= 0) {
-                        this.showDialogue("BATTLE", "Your Pokémon fainted! Retreating...", 2000);
-                        setTimeout(() => this.endBattle(), 2000);
-                    }
-                }, 800);
-            }
-
-            endBattle() {
-                this.ui.battleUI.style.display = 'none';
-                if (this.wildMesh) this.scene.remove(this.wildMesh);
-
-                this.camera.position.copy(this.preBattleCamPos);
-                this.camera.rotation.copy(this.preBattleCamRot);
-
-                this.state = 'EXPLORE';
-                this.controls.lock();
-            }
-
-            updateLocation(name) {
-                if (this.currentRegion !== name) {
-                    this.currentRegion = name;
-                    this.ui.locationName.innerText = name;
-
-                    if (name === 'Alola Region') this.scene.background.setHex(0x0284c7);
-                    else if (name === 'Galar Region') this.scene.background.setHex(0x334155);
-                    else this.scene.background.setHex(0x38bdf8);
-
-                    this.scene.fog.color.copy(this.scene.background);
-                }
-            }
-
-            animate() {
-                requestAnimationFrame(() => this.animate());
-
-                const time = performance.now();
-                const delta = (time - this.prevTime) / 1000;
-
-                for (let i = this.animatedSpawns.length - 1; i >= 0; i--) {
-                    const anim = this.animatedSpawns[i];
-                    const progress = Math.min((time - anim.startTime) / anim.duration, 1.0);
-                    const easeOut = Math.sin((progress * Math.PI) / 2);
-
-                    anim.mesh.position.y = -2 + (anim.targetY + 2) * easeOut;
-
-                    if (progress >= 1.0) {
-                        this.animatedSpawns.splice(i, 1);
-                    }
-                }
-
-                if (this.controls.isLocked && (this.state === 'EXPLORE' || this.state === 'INTRO')) {
-                    this.velocity.x -= this.velocity.x * 10.0 * delta;
-                    this.velocity.z -= this.velocity.z * 10.0 * delta;
-                    this.velocity.y -= 30.0 * delta;
-
-                    this.direction.z = Number(this.move.forward) - Number(this.move.backward);
-                    this.direction.x = Number(this.move.right) - Number(this.move.left);
-                    this.direction.normalize();
-
-                    const speed = this.move.sprint ? 90.0 : 45.0;
-                    if (this.move.forward || this.move.backward) this.velocity.z -= this.direction.z * speed * delta;
-                    if (this.move.left || this.move.right) this.velocity.x -= this.direction.x * speed * delta;
-
-                    this.controls.moveRight(-this.velocity.x * delta);
-                    this.controls.moveForward(-this.velocity.z * delta);
-                    this.camera.position.y += this.velocity.y * delta;
-
-                    if (this.camera.position.y < 2.0) {
-                        this.velocity.y = 0;
-                        this.camera.position.y = 2.0;
-                        this.canJump = true;
-                    }
-
-                    const pos = this.camera.position;
-
-                    for (let p of this.portals) {
-                        if (pos.distanceTo(p.mesh.position) < 3.0) {
-                            this.camera.position.copy(p.target);
-                            this.showDialogue("PORTAL", "Traveled through inter-regional portal!", 2000);
-                        }
-                    }
-
-                    let inZone = false;
-                    for (let z of this.encounterZones) {
-                        if (pos.x >= z.xMin && pos.x <= z.xMax && pos.z >= z.zMin && pos.z <= z.zMax) {
-                            this.updateLocation(z.regionName);
-                            inZone = true;
-                            break;
-                        }
-                    }
-
-                    if (!inZone) {
-                        if (pos.x > 300) this.updateLocation("Alola Region");
-                        else if (pos.x < -300) this.updateLocation("Galar Region");
-                        else this.updateLocation("Pallet Town");
-                    }
-
-                    this.trySpawnWildPokemon();
-
-                    for (let i = this.spawnedWilds.length - 1; i >= 0; i--) {
-                        const wild = this.spawnedWilds[i];
-                        const progress = Math.min((time - wild.startTime) / wild.duration, 1.0);
-                        const easeOut = Math.sin((progress * Math.PI) / 2);
-
-                        if (!wild.active) {
-                            wild.mesh.position.y = -2 + (wild.targetY + 2) * easeOut;
-                            if (progress >= 1.0) wild.active = true;
-                        } else {
-                            wild.mesh.rotation.y += 0.02;
-                            wild.mesh.position.y = 0.4 + Math.sin(time * 0.005) * 0.08;
-                        }
-
-                        const distToPlayer = wild.mesh.position.distanceTo(this.camera.position);
-
-                        if (wild.active && distToPlayer < 2.5 && this.state === 'EXPLORE') {
-                            this.triggerEncounter([wild.species], wild);
-                            break;
-                        }
-                    }
-
-                    if (this.followerMesh) {
-                        const targetPos = this.camera.position.clone().add(
-                            new THREE.Vector3(0, -1.2, 3.5).applyQuaternion(this.camera.quaternion)
-                        );
-                        this.followerMesh.position.lerp(targetPos, 0.08);
-                        this.followerMesh.lookAt(this.camera.position.x, this.followerMesh.position.y, this.camera.position.z);
-                    }
-                }
-
-                this.prevTime = time;
-                this.renderer.render(this.scene, this.camera);
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            window.gameInstance = new PokemonGame();
-        });
+        initControls() {
+            this.controls = new PointerLockControls(this.camera, this.renderer.domElement);
+
+            this.controls.addEventListener('lock', () => {
+                this.ui.crosshair.style.display = 'block';
+                if (this.state === 'INTRO') {
+                    this.showDialogue("Prof. Oak", "Welcome! Step forward and pick a Poké Ball from the table to choose your starter!");
+                }
+            });
+
+            this.controls.addEventListener('unlock', () => {
+                this.ui.crosshair.style.display = 'none';
+                if (this.state !== 'BATTLE') {
+                    this.ui.startScreen.style.display = 'flex';
+                    this.ui.startScreen.style.opacity = '1';
+                }
+            });
+
+            document.addEventListener('keydown', (e) => this.onKey(e, true));
+            document.addEventListener('keyup', (e) => this.onKey(e, false));
+
+            const raycaster = new THREE.Raycaster();
+            document.addEventListener('mousedown', () => {
+                if (!this.controls.isLocked) return;
+
+                if (this.state === 'INTRO') {
+                    raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
+                    const hits = raycaster.intersectObjects(this.interactables);
+                    if (hits.length > 0) {
+                        const starter = hits[0].object.userData.starter;
+                        if (starter) this.selectStarter(starter);
+                    }
+                }
+            });
+        }
+
+        onKey(e, isDown) {
+            switch (e.code) {
+                case 'KeyW': case 'ArrowUp': this.move.forward = isDown; break;
+                case 'KeyS': case 'ArrowDown': this.move.backward = isDown; break;
+                case 'KeyA': case 'ArrowLeft': this.move.left = isDown; break;
+                case 'KeyD': case 'ArrowRight': this.move.right = isDown; break;
+                case 'ShiftLeft': case 'ShiftRight': this.move.sprint = isDown; break;
+                case 'Space':
+                    if (isDown && this.canJump && this.controls.isLocked) {
+                        this.velocity.y += 12;
+                        this.canJump = false;
+                    }
+                    break;
+            }
+        }
+
+        showDialogue(speaker, text, duration = 4000) {
+            this.ui.dialogueSpeaker.innerText = speaker;
+            this.ui.dialogueText.innerText = text;
+            this.ui.dialogueBox.style.display = 'block';
+            if (duration > 0) setTimeout(() => { this.ui.dialogueBox.style.display = 'none'; }, duration);
+        }
+
+        selectStarter(name) {
+            this.playerStarter = name;
+            this.showDialogue("Prof. Oak", `Ah! ${name} is a fantastic choice! Take good care of it on your journey!`);
+            this.state = 'EXPLORE';
+
+            this.followerMesh = this.createPokemonMesh(name);
+            this.followerMesh.position.copy(this.camera.position).add(new THREE.Vector3(0, -1, -3));
+            this.scene.add(this.followerMesh);
+        }
+
+        triggerEncounter(pool, wildEntity = null) {
+            const wildName = Array.isArray(pool) ? pool[Math.floor(Math.random() * pool.length)] : pool;
+
+            if (wildEntity) {
+                const index = this.spawnedWilds.findIndex(w => w.mesh === wildEntity.mesh);
+                if (index >= 0) this.spawnedWilds.splice(index, 1);
+                this.scene.remove(wildEntity.mesh);
+            }
+
+            this.state = 'BATTLE';
+            this.controls.unlock();
+
+            this.ui.flash.style.opacity = '1';
+            setTimeout(() => { this.ui.flash.style.opacity = '0'; }, 200);
+
+            this.preBattleCamPos.copy(this.camera.position);
+            this.preBattleCamRot.copy(this.camera.rotation);
+
+            this.camera.position.set(0, 3.5, 9);
+            this.camera.lookAt(0, 1, 0);
+
+            this.wildMesh = this.createPokemonMesh(wildName);
+            this.wildMesh.position.set(0, -2, -1);
+            this.scene.add(this.wildMesh);
+
+            this.animatedSpawns.push({ mesh: this.wildMesh, targetY: 0.4, startTime: performance.now(), duration: 600 });
+
+            this.wildHP = 100;
+            this.playerHP = 100;
+
+            this.ui.enemyName.innerText = `Wild ${wildName}`;
+            this.ui.playerName.innerText = this.playerStarter || 'Starter';
+            this.ui.enemyHPBar.style.width = '100%';
+            this.ui.playerHPBar.style.width = '100%';
+
+            this.ui.battleUI.style.display = 'flex';
+        }
+
+        battleAction(action) {
+            if (action === 'fight') {
+                this.wildHP = Math.max(0, this.wildHP - (20 + Math.floor(Math.random() * 20)));
+                this.ui.enemyHPBar.style.width = `${this.wildHP}%`;
+                if (this.wildHP <= 0) { this.showDialogue("BATTLE", "Wild Pokémon fainted! Victory!", 2000); setTimeout(() => this.endBattle(), 2000); return; }
+            } else if (action === 'catch') {
+                if (Math.random() > 0.4) { this.showDialogue("BATTLE", "Gotcha! The wild Pokémon was caught!", 2000); setTimeout(() => this.endBattle(), 2000); return; }
+                else { this.showDialogue("BATTLE", "Oh no! It broke free!", 1500); }
+            } else if (action === 'run') {
+                this.showDialogue("BATTLE", "Got away safely!", 1500);
+                setTimeout(() => this.endBattle(), 1500);
+                return;
+            }
+
+            setTimeout(() => {
+                this.playerHP = Math.max(0, this.playerHP - (10 + Math.floor(Math.random() * 15)));
+                this.ui.playerHPBar.style.width = `${this.playerHP}%`;
+                if (this.playerHP <= 0) { this.showDialogue("BATTLE", "Your Pokémon fainted! Retreating...", 2000); setTimeout(() => this.endBattle(), 2000); }
+            }, 800);
+        }
+
+        endBattle() {
+            this.ui.battleUI.style.display = 'none';
+            if (this.wildMesh) this.scene.remove(this.wildMesh);
+            this.camera.position.copy(this.preBattleCamPos);
+            this.camera.rotation.copy(this.preBattleCamRot);
+            this.state = 'EXPLORE';
+            this.controls.lock();
+        }
+
+        updateLocation(name) {
+            if (this.currentRegion !== name) {
+                this.currentRegion = name;
+                this.ui.locationName.innerText = name;
+                if (name === 'Alola Region') this.scene.background.setHex(0x0284c7);
+                else if (name === 'Galar Region') this.scene.background.setHex(0x334155);
+                else this.scene.background.setHex(0x38bdf8);
+                this.scene.fog.color.copy(this.scene.background);
+            }
+        }
+
+        animate() {
+            requestAnimationFrame(() => this.animate());
+            const time = performance.now();
+            const delta = (time - this.prevTime) / 1000;
+
+            for (let i = this.animatedSpawns.length - 1; i >= 0; i--) {
+                const anim = this.animatedSpawns[i];
+                const progress = Math.min((time - anim.startTime) / anim.duration, 1.0);
+                const easeOut = Math.sin((progress * Math.PI) / 2);
+                anim.mesh.position.y = -2 + (anim.targetY + 2) * easeOut;
+                if (progress >= 1.0) this.animatedSpawns.splice(i, 1);
+            }
+
+            if (this.controls.isLocked && (this.state === 'EXPLORE' || this.state === 'INTRO')) {
+                this.velocity.x -= this.velocity.x * 10.0 * delta;
+                this.velocity.z -= this.velocity.z * 10.0 * delta;
+                this.velocity.y -= 30.0 * delta;
+
+                this.direction.z = Number(this.move.forward) - Number(this.move.backward);
+                this.direction.x = Number(this.move.right) - Number(this.move.left);
+                this.direction.normalize();
+
+                const speed = this.move.sprint ? 90.0 : 45.0;
+                if (this.move.forward || this.move.backward) this.velocity.z -= this.direction.z * speed * delta;
+                if (this.move.left || this.move.right) this.velocity.x -= this.direction.x * speed * delta;
+
+                this.controls.moveRight(-this.velocity.x * delta);
+                this.controls.moveForward(-this.velocity.z * delta);
+                this.camera.position.y += this.velocity.y * delta;
+
+                if (this.camera.position.y < 2.0) { this.velocity.y = 0; this.camera.position.y = 2.0; this.canJump = true; }
+
+                const pos = this.camera.position;
+
+                for (let p of this.portals) {
+                    if (pos.distanceTo(p.mesh.position) < 3.0) {
+                        this.camera.position.copy(p.target);
+                        this.showDialogue("PORTAL", "Traveled through inter-regional portal!", 2000);
+                    }
+                }
+
+                let inZone = false;
+                for (let z of this.encounterZones) {
+                    if (pos.x >= z.xMin && pos.x <= z.xMax && pos.z >= z.zMin && pos.z <= z.zMax) {
+                        this.updateLocation(z.regionName);
+                        inZone = true;
+                        break;
+                    }
+                }
+
+                if (!inZone) {
+                    if (pos.x > 300) this.updateLocation("Alola Region");
+                    else if (pos.x < -300) this.updateLocation("Galar Region");
+                    else this.updateLocation("Pallet Town");
+                }
+
+                this.trySpawnWildPokemon();
+
+                for (let i = this.spawnedWilds.length - 1; i >= 0; i--) {
+                    const wild = this.spawnedWilds[i];
+                    const progress = Math.min((time - wild.startTime) / wild.duration, 1.0);
+                    const easeOut = Math.sin((progress * Math.PI) / 2);
+
+                    if (!wild.active) {
+                        wild.mesh.position.y = -2 + (wild.targetY + 2) * easeOut;
+                        if (progress >= 1.0) wild.active = true;
+                    } else {
+                        wild.mesh.rotation.y += 0.02;
+                        wild.mesh.position.y = 0.4 + Math.sin(time * 0.005) * 0.08;
+                    }
+
+                    const distToPlayer = wild.mesh.position.distanceTo(this.camera.position);
+
+                    if (wild.active && distToPlayer < 2.5 && this.state === 'EXPLORE') {
+                        this.triggerEncounter([wild.species], wild);
+                        break;
+                    }
+                }
+
+                if (this.followerMesh) {
+                    const targetPos = this.camera.position.clone().add(
+                        new THREE.Vector3(0, -1.2, 3.5).applyQuaternion(this.camera.quaternion)
+                    );
+                    this.followerMesh.position.lerp(targetPos, 0.08);
+                    this.followerMesh.lookAt(this.camera.position.x, this.followerMesh.position.y, this.camera.position.z);
+                }
+            }
+
+            this.prevTime = time;
+            this.renderer.render(this.scene, this.camera);
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => { window.gameInstance = new PokemonGame(); });
     </script>
 </body>
 </html>
