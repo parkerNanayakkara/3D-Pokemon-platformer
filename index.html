@@ -109,7 +109,7 @@
                     <div><b class="text-amber-400">Shift:</b> Sprint</div>
                     <div><b class="text-amber-400">Space:</b> Jump</div>
                 </div>
-                <button id="btn-start-game" class="w-full py-4 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold text-lg rounded-2xl shadow-lg transition duration-200 active:scale-[0.99] pointer-active">
+                <button id="btn-start-game" class="w-full py-4 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold text-lg rounded-2xl shadow-lg">
                     ENTER WORLD
                 </button>
             </div>
@@ -122,7 +122,7 @@
             <span id="location-name" class="text-white font-bold tracking-widest uppercase text-sm sm:text-base">Pallet Town</span>
         </div>
 
-        <div id="dialogue-box" class="absolute bottom-20 left-1/2 transform -translate-x-1/2 w-[90%] max-w-2xl glass-panel p-5 rounded-2xl border border-amber-500/40 text-white font-medium text-base hidden">
+        <div id="dialogue-box" class="absolute bottom-20 left-1/2 transform -translate-x-1/2 w-[90%] max-w-2xl glass-panel p-5 rounded-2xl border border-amber-500/40 text-white font-medium text-base">
             <div class="text-amber-400 font-bold text-xs uppercase mb-1 tracking-wider" id="dialogue-speaker">PROFESSOR OAK</div>
             <div id="dialogue-text">Welcome to the world of Pokémon!</div>
         </div>
@@ -146,9 +146,9 @@
                 </div>
 
                 <div class="grid grid-cols-3 gap-3 w-full pointer-active">
-                    <button onclick="window.gameInstance.battleAction('fight')" class="py-3.5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-xl shadow-lg border border-red-400/30 transition">FIGHT</button>
-                    <button onclick="window.gameInstance.battleAction('catch')" class="py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-xl shadow-lg border border-cyan-400/30 transition">CATCH</button>
-                    <button onclick="window.gameInstance.battleAction('run')" class="py-3.5 bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white font-bold rounded-xl shadow-lg border border-slate-500/30 transition">RUN</button>
+                    <button onclick="window.gameInstance.battleAction('fight')" class="py-3.5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-lg">FIGHT</button>
+                    <button onclick="window.gameInstance.battleAction('catch')" class="py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-lg">CATCH</button>
+                    <button onclick="window.gameInstance.battleAction('run')" class="py-3.5 bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white font-bold rounded-lg">RUN</button>
                 </div>
             </div>
         </div>
@@ -371,6 +371,20 @@
                     group.add(forehead);
                     break;
 
+                case 'xerneas':
+                    // Simple stylized Xerneas-like mesh (glowing antlers + body)
+                    mat = new THREE.MeshStandardMaterial({ color: 0x0ea5b9, emissive: 0x60a5fa, emissiveIntensity: 0.6, roughness: 0.25 });
+                    mainGeo = new THREE.BoxGeometry(1.6, 1.0, 0.9);
+                    const antlerMat = new THREE.MeshStandardMaterial({ color: 0x7c3aed, emissive: 0x60a5fa, emissiveIntensity: 0.8 });
+                    const antlerLeft = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.08, 8, 16, Math.PI), antlerMat);
+                    antlerLeft.position.set(-0.6, 0.9, 0);
+                    antlerLeft.rotation.z = Math.PI / 2;
+                    group.add(antlerLeft);
+                    const antlerRight = antlerLeft.clone();
+                    antlerRight.position.set(0.6, 0.9, 0);
+                    group.add(antlerRight);
+                    break;
+
                 default:
                     mat = new THREE.MeshStandardMaterial({ color: name === 'pikachu' ? 0xeab308 : (name === 'rattata' ? 0x9333ea : 0xa16207) });
                     mainGeo = new THREE.BoxGeometry(0.7, 0.7, 0.7);
@@ -501,61 +515,8 @@
             this.portals.push({ mesh: group, target: new THREE.Vector3(dx, dy, dz) });
         }
 
-        spawnWildPokemon(species, x, z) {
-            const mesh = this.createPokemonMesh(species);
-            mesh.position.set(x, -2, z);
-            mesh.scale.setScalar(1.2);
-
-            mesh.userData = { ...mesh.userData, isWild: true, species: species };
-
-            this.scene.add(mesh);
-
-            this.spawnedWilds.push({
-                mesh,
-                species,
-                targetY: 0.4,
-                startTime: performance.now(),
-                duration: 700,
-                active: false
-            });
-        }
-
-        trySpawnWildPokemon() {
-            if (this.state !== 'EXPLORE' || !this.controls.isLocked) return;
-
-            const now = performance.now();
-            if (now - this.lastWildSpawnTime < 1800) return;
-            this.lastWildSpawnTime = now;
-
-            const pos = this.camera.position;
-
-            for (const zone of this.encounterZones) {
-                const inZone =
-                    pos.x >= zone.xMin && pos.x <= zone.xMax &&
-                    pos.z >= zone.zMin && pos.z <= zone.zMax;
-
-                if (!inZone) continue;
-
-                const spawnX = zone.xMin + Math.random() * (zone.xMax - zone.xMin);
-                const spawnZ = zone.zMin + Math.random() * (zone.zMax - zone.zMin);
-                const dist = Math.hypot(spawnX - pos.x, spawnZ - pos.z);
-
-                if (dist < 8 || dist > 30) continue;
-
-                const species = zone.pool[Math.floor(Math.random() * zone.pool.length)];
-                const tooClose = this.spawnedWilds.some(w => {
-                    return w.mesh.position.distanceTo(new THREE.Vector3(spawnX, 0.4, spawnZ)) < 3;
-                });
-
-                if (!tooClose) {
-                    this.spawnWildPokemon(species, spawnX, spawnZ);
-                    return;
-                }
-            }
-        }
-
         initControls() {
-            this.controls = new PointerLockControls(this.camera, this.renderer.domElement);
+            this.controls = new PointerLockControls(this.camera, document.body);
 
             this.controls.addEventListener('lock', () => {
                 this.ui.crosshair.style.display = 'block';
@@ -610,7 +571,9 @@
             this.ui.dialogueSpeaker.innerText = speaker;
             this.ui.dialogueText.innerText = text;
             this.ui.dialogueBox.style.display = 'block';
-            if (duration > 0) setTimeout(() => { this.ui.dialogueBox.style.display = 'none'; }, duration);
+            if (duration > 0) {
+                setTimeout(() => { this.ui.dialogueBox.style.display = 'none'; }, duration);
+            }
         }
 
         selectStarter(name) {
@@ -623,20 +586,14 @@
             this.scene.add(this.followerMesh);
         }
 
-        triggerEncounter(pool, wildEntity = null) {
-            const wildName = Array.isArray(pool) ? pool[Math.floor(Math.random() * pool.length)] : pool;
-
-            if (wildEntity) {
-                const index = this.spawnedWilds.findIndex(w => w.mesh === wildEntity.mesh);
-                if (index >= 0) this.spawnedWilds.splice(index, 1);
-                this.scene.remove(wildEntity.mesh);
-            }
-
+        triggerEncounter(pool) {
             this.state = 'BATTLE';
             this.controls.unlock();
 
             this.ui.flash.style.opacity = '1';
             setTimeout(() => { this.ui.flash.style.opacity = '0'; }, 200);
+
+            const wildName = pool[Math.floor(Math.random() * pool.length)];
 
             this.preBattleCamPos.copy(this.camera.position);
             this.preBattleCamRot.copy(this.camera.rotation);
@@ -648,7 +605,12 @@
             this.wildMesh.position.set(0, -2, -1);
             this.scene.add(this.wildMesh);
 
-            this.animatedSpawns.push({ mesh: this.wildMesh, targetY: 0.4, startTime: performance.now(), duration: 600 });
+            this.animatedSpawns.push({
+                mesh: this.wildMesh,
+                targetY: 0.4,
+                startTime: performance.now(),
+                duration: 600
+            });
 
             this.wildHP = 100;
             this.playerHP = 100;
@@ -665,10 +627,20 @@
             if (action === 'fight') {
                 this.wildHP = Math.max(0, this.wildHP - (20 + Math.floor(Math.random() * 20)));
                 this.ui.enemyHPBar.style.width = `${this.wildHP}%`;
-                if (this.wildHP <= 0) { this.showDialogue("BATTLE", "Wild Pokémon fainted! Victory!", 2000); setTimeout(() => this.endBattle(), 2000); return; }
+
+                if (this.wildHP <= 0) {
+                    this.showDialogue("BATTLE", "Wild Pokémon fainted! Victory!", 2000);
+                    setTimeout(() => this.endBattle(), 2000);
+                    return;
+                }
             } else if (action === 'catch') {
-                if (Math.random() > 0.4) { this.showDialogue("BATTLE", "Gotcha! The wild Pokémon was caught!", 2000); setTimeout(() => this.endBattle(), 2000); return; }
-                else { this.showDialogue("BATTLE", "Oh no! It broke free!", 1500); }
+                if (Math.random() > 0.4) {
+                    this.showDialogue("BATTLE", "Gotcha! The wild Pokémon was caught!", 2000);
+                    setTimeout(() => this.endBattle(), 2000);
+                    return;
+                } else {
+                    this.showDialogue("BATTLE", "Oh no! It broke free!", 1500);
+                }
             } else if (action === 'run') {
                 this.showDialogue("BATTLE", "Got away safely!", 1500);
                 setTimeout(() => this.endBattle(), 1500);
@@ -678,15 +650,20 @@
             setTimeout(() => {
                 this.playerHP = Math.max(0, this.playerHP - (10 + Math.floor(Math.random() * 15)));
                 this.ui.playerHPBar.style.width = `${this.playerHP}%`;
-                if (this.playerHP <= 0) { this.showDialogue("BATTLE", "Your Pokémon fainted! Retreating...", 2000); setTimeout(() => this.endBattle(), 2000); }
+                if (this.playerHP <= 0) {
+                    this.showDialogue("BATTLE", "Your Pokémon fainted! Retreating...", 2000);
+                    setTimeout(() => this.endBattle(), 2000);
+                }
             }, 800);
         }
 
         endBattle() {
             this.ui.battleUI.style.display = 'none';
             if (this.wildMesh) this.scene.remove(this.wildMesh);
+
             this.camera.position.copy(this.preBattleCamPos);
             this.camera.rotation.copy(this.preBattleCamRot);
+
             this.state = 'EXPLORE';
             this.controls.lock();
         }
@@ -695,15 +672,18 @@
             if (this.currentRegion !== name) {
                 this.currentRegion = name;
                 this.ui.locationName.innerText = name;
+                
                 if (name === 'Alola Region') this.scene.background.setHex(0x0284c7);
                 else if (name === 'Galar Region') this.scene.background.setHex(0x334155);
                 else this.scene.background.setHex(0x38bdf8);
+
                 this.scene.fog.color.copy(this.scene.background);
             }
         }
 
         animate() {
             requestAnimationFrame(() => this.animate());
+
             const time = performance.now();
             const delta = (time - this.prevTime) / 1000;
 
@@ -732,7 +712,11 @@
                 this.controls.moveForward(-this.velocity.z * delta);
                 this.camera.position.y += this.velocity.y * delta;
 
-                if (this.camera.position.y < 2.0) { this.velocity.y = 0; this.camera.position.y = 2.0; this.canJump = true; }
+                if (this.camera.position.y < 2.0) {
+                    this.velocity.y = 0;
+                    this.camera.position.y = 2.0;
+                    this.canJump = true;
+                }
 
                 const pos = this.camera.position;
 
@@ -748,7 +732,10 @@
                     if (pos.x >= z.xMin && pos.x <= z.xMax && pos.z >= z.zMin && pos.z <= z.zMax) {
                         this.updateLocation(z.regionName);
                         inZone = true;
-                        break;
+                        if (this.state === 'EXPLORE' && Math.random() < 0.006) {
+                            this.triggerEncounter(z.pool);
+                            break;
+                        }
                     }
                 }
 
@@ -756,29 +743,6 @@
                     if (pos.x > 300) this.updateLocation("Alola Region");
                     else if (pos.x < -300) this.updateLocation("Galar Region");
                     else this.updateLocation("Pallet Town");
-                }
-
-                this.trySpawnWildPokemon();
-
-                for (let i = this.spawnedWilds.length - 1; i >= 0; i--) {
-                    const wild = this.spawnedWilds[i];
-                    const progress = Math.min((time - wild.startTime) / wild.duration, 1.0);
-                    const easeOut = Math.sin((progress * Math.PI) / 2);
-
-                    if (!wild.active) {
-                        wild.mesh.position.y = -2 + (wild.targetY + 2) * easeOut;
-                        if (progress >= 1.0) wild.active = true;
-                    } else {
-                        wild.mesh.rotation.y += 0.02;
-                        wild.mesh.position.y = 0.4 + Math.sin(time * 0.005) * 0.08;
-                    }
-
-                    const distToPlayer = wild.mesh.position.distanceTo(this.camera.position);
-
-                    if (wild.active && distToPlayer < 2.5 && this.state === 'EXPLORE') {
-                        this.triggerEncounter([wild.species], wild);
-                        break;
-                    }
                 }
 
                 if (this.followerMesh) {
@@ -795,7 +759,29 @@
         }
     }
 
-    window.addEventListener('DOMContentLoaded', () => { window.gameInstance = new PokemonGame(); });
+    // Global Launch + add secret Xerneas Pokéball into Oak's lab
+    window.addEventListener('DOMContentLoaded', () => {
+        window.gameInstance = new PokemonGame();
+
+        // Add secret Xerneas Pokéball inside Oak's lab (placed near the NPC)
+        try {
+            const g = window.gameInstance;
+            const xerneBall = g.createPokeball('Xerneas');
+            xerneBall.position.set(2.8, 1.2, -7.5); // tucked near Oak
+            xerneBall.scale.set(0.85, 0.85, 0.85);
+            // tint the top to make it feel special
+            if (xerneBall.children[0] && xerneBall.children[0].material) {
+                xerneBall.children[0].material.color.setHex(0x60a5fa);
+                xerneBall.children[0].material.emissive = new THREE.Color(0x1e3a8a);
+                xerneBall.children[0].material.emissiveIntensity = 0.6;
+            }
+            g.scene.add(xerneBall);
+            // mark hit mesh as secret (optional)
+            xerneBall.children.forEach(c => { if (c.userData && c.userData.starter === 'Xerneas') c.userData.secret = true; });
+        } catch (err) {
+            console.error('Failed to add secret Xerneas ball:', err);
+        }
+    });
     </script>
 </body>
 </html>
