@@ -1,888 +1,767 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Pokémon Starter Adventure</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #0f172a;
-            font-family: system-ui, -apple-system, sans-serif;
-            user-select: none;
-        }
-
-        #canvas-container {
-            width: 100vw;
-            height: 100vh;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-        }
-
-        #ui-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        .pointer-active { pointer-events: auto; }
-
-        #crosshair {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 10px;
-            height: 10px;
-            background: rgba(255,255,255,0.8);
-            border-radius: 50%;
-            border: 2px solid rgba(0,0,0,0.5);
-            display: none;
-            box-shadow: 0 0 10px rgba(255,255,255,0.8);
-        }
-
-        .glass-panel {
-            background: rgba(15,23,42,0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        }
-
-        .hp-bar-bg {
-            background: rgba(51,65,85,0.8);
-            height: 14px;
-            border-radius: 7px;
-            overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .hp-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg,#22c55e,#4ade80);
-            width: 100%;
-            transition: width 0.4s ease, background 0.3s;
-        }
-
-        @keyframes pulse-glow {
-            0%,100% { opacity: 0.6; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.05); }
-        }
-        .animate-glow { animation: pulse-glow 2s infinite ease-in-out; }
+        body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; user-select: none; }
+        #canvas-container { width: 100vw; height: 100vh; }
+        .hud-glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); }
+        .glow-text { text-shadow: 0 0 10px rgba(59, 130, 246, 0.6); }
+        .pixel-border { border: 2px solid #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+        @keyframes pulse-light { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.9; } }
+        .animate-pulse-slow { animation: pulse-light 3s infinite ease-in-out; }
     </style>
-
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-    }
-    </script>
 </head>
-<body>
+<body class="bg-slate-950 text-white">
+
     <div id="canvas-container"></div>
 
-    <div id="ui-overlay">
-        <div id="start-screen" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 pointer-active z-50 transition-opacity duration-500">
-            <div class="glass-panel p-8 rounded-3xl max-w-xl text-center border border-amber-500/30">
-                <div class="inline-block bg-amber-500/10 text-amber-400 font-semibold px-4 py-1.5 rounded-full text-sm mb-4 border border-amber-500/20">
-                    3D Pokémon Adventure
+    <!-- Crosshair -->
+    <div id="crosshair" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden z-20">
+        <div class="w-3 h-3 bg-white/80 rounded-full border border-slate-900 shadow-md"></div>
+    </div>
+
+    <!-- Top Navigation / Status HUD -->
+    <div id="top-hud" class="fixed top-4 left-4 right-4 flex justify-between items-center z-10 pointer-events-none">
+        <div class="hud-glass px-4 py-2 rounded-xl flex items-center space-x-3 pointer-events-auto">
+            <div class="w-3 h-3 bg-emerald-400 rounded-full animate-ping"></div>
+            <span id="region-display" class="font-bold tracking-wide text-emerald-400 text-sm uppercase">Pallet Town Lab</span>
+        </div>
+
+        <div class="flex items-center space-x-3 pointer-events-auto">
+            <button id="music-btn" class="hud-glass p-3 rounded-xl hover:bg-slate-800 transition flex items-center justify-center text-amber-400">
+                <i class="fas me-2 fa-music"></i> <span id="music-status" class="text-xs font-bold">MUSIC: OFF</span>
+            </button>
+            <button id="party-btn" class="hud-glass px-4 py-2.5 rounded-xl hover:bg-slate-800 transition flex items-center space-x-2 text-sky-400 font-bold text-sm">
+                <i class="fas fa-th-list"></i>
+                <span>PARTY (P)</span>
+                <span id="party-count-badge" class="bg-sky-500 text-slate-950 px-2 py-0.5 rounded-full text-xs ml-1 font-extrabold">0</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Start Overlay -->
+    <div id="start-screen" class="fixed inset-0 bg-slate-950/90 z-30 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-500">
+        <div class="max-w-md w-full hud-glass p-8 rounded-3xl pixel-border">
+            <div class="w-20 h-20 bg-red-500 rounded-full mx-auto mb-6 flex items-center justify-center border-4 border-slate-900 shadow-lg relative">
+                <div class="w-full h-2 bg-slate-900 absolute"></div>
+                <div class="w-8 h-8 bg-white rounded-full border-4 border-slate-900 z-10 flex items-center justify-center">
+                    <div class="w-3 h-3 bg-slate-400 rounded-full"></div>
                 </div>
-                <h1 class="text-4xl sm:text-5xl font-black text-white tracking-wider mb-4 drop-shadow-md">PALLET TOWN & BEYOND</h1>
-                <p class="text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
-                    Step into Professor Oak's lab, choose your starter Pokémon, and explore multi-regional routes with first-person WASD movement!
-                </p>
-                <div class="grid grid-cols-2 gap-3 text-left bg-slate-900/60 p-4 rounded-xl mb-6 border border-slate-800 text-xs text-slate-300">
-                    <div><b class="text-amber-400">WASD:</b> Move Around</div>
-                    <div><b class="text-amber-400">Mouse:</b> Free Look Camera</div>
-                    <div><b class="text-amber-400">Shift:</b> Sprint</div>
-                    <div><b class="text-amber-400">Space:</b> Jump</div>
+            </div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-white mb-2 glow-text">POKÉMON STARTER ADVENTURE</h1>
+            <p class="text-slate-400 text-sm mb-6">Explore regional biomes, encounter 3D Pokémon, engage in turn-based battles, and build your team!</p>
+            <button id="start-btn" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-lg transform active:scale-95 transition">
+                CLICK TO START ADVENTURE
+            </button>
+            <div class="mt-6 text-xs text-slate-500 flex justify-center space-x-4">
+                <span><i class="fas fa-keyboard"></i> WASD to Move</span>
+                <span><i class="fas fa-mouse"></i> Mouse to Look</span>
+                <span><i class="fas fa-hand-pointer"></i> Click Pokéballs</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dialogue Box -->
+    <div id="dialogue-box" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl hud-glass p-5 rounded-2xl hidden z-20 transition-all border-l-4 border-l-blue-500 shadow-2xl">
+        <h3 id="dialogue-speaker" class="text-xs font-bold uppercase tracking-wider text-blue-400 mb-1">Prof. Oak</h3>
+        <p id="dialogue-text" class="text-sm md:text-base text-slate-200 leading-relaxed"></p>
+        <div class="text-right mt-2">
+            <span class="text-xs text-slate-400 animate-pulse">[Click anywhere to continue]</span>
+        </div>
+    </div>
+
+    <!-- Party Menu Modal -->
+    <div id="party-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-40 hidden flex items-center justify-center p-4">
+        <div class="max-w-3xl w-full hud-glass rounded-3xl p-6 border border-slate-700 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-boxes text-sky-400 text-xl"></i>
+                    <h2 class="text-xl font-bold tracking-wide">YOUR POKÉMON PARTY</h2>
                 </div>
-                <button id="btn-start-game" class="w-full py-4 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold text-lg rounded-2xl shadow-lg">
-                    ENTER WORLD
+                <button id="close-party-btn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="party-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2">
+                <!-- Party members populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Battle Overlay UI -->
+    <div id="battle-ui" class="fixed inset-0 z-30 hidden pointer-events-none flex flex-col justify-between p-6">
+        <!-- Enemy Status -->
+        <div class="self-start pointer-events-auto hud-glass p-4 rounded-2xl w-72 border-l-4 border-l-rose-500 shadow-xl">
+            <div class="flex justify-between items-center mb-1">
+                <span id="enemy-name" class="font-bold text-white uppercase text-sm">Wild Charmander</span>
+                <span id="enemy-level" class="text-xs text-slate-400 font-semibold">Lv. 5</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-700">
+                <div id="enemy-hp-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 100%;"></div>
+            </div>
+            <div class="text-right text-[10px] text-slate-400 mt-1 font-mono" id="enemy-hp-text">20/20 HP</div>
+        </div>
+
+        <!-- Player Status -->
+        <div class="self-end pointer-events-auto hud-glass p-4 rounded-2xl w-72 border-r-4 border-r-emerald-500 shadow-xl">
+            <div class="flex justify-between items-center mb-1">
+                <span id="player-name" class="font-bold text-white uppercase text-sm">Pikachu</span>
+                <span id="player-level" class="text-xs text-slate-400 font-semibold">Lv. 5</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-700">
+                <div id="player-hp-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 100%;"></div>
+            </div>
+            <div class="text-right text-[10px] text-slate-400 mt-1 font-mono" id="player-hp-text">22/22 HP</div>
+        </div>
+
+        <!-- Battle Controls -->
+        <div class="self-center w-full max-w-xl pointer-events-auto hud-glass p-4 rounded-2xl shadow-2xl border border-slate-700">
+            <div id="battle-message" class="text-center font-semibold text-slate-200 text-sm mb-3 min-h-[1.25rem]">
+                What will your Pokémon do?
+            </div>
+            <div id="battle-actions" class="grid grid-cols-2 gap-3">
+                <button id="btn-attack-1" class="py-3 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow">
+                    Tackle
+                </button>
+                <button id="btn-attack-2" class="py-3 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow">
+                    Special Move
+                </button>
+                <button id="btn-catch" class="py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow">
+                    Throw Pokéball
+                </button>
+                <button id="btn-run" class="py-3 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow">
+                    Run Away
                 </button>
             </div>
         </div>
-
-        <div id="crosshair"></div>
-
-        <div id="location-ui" class="absolute bottom-6 left-6 glass-panel px-6 py-3 rounded-2xl border border-emerald-500/30 flex items-center gap-3 transition-all">
-            <div class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></div>
-            <span id="location-name" class="text-white font-bold tracking-widest uppercase text-sm sm:text-base">Pallet Town</span>
-        </div>
-
-        <div id="dialogue-box" class="absolute bottom-20 left-1/2 transform -translate-x-1/2 w-[90%] max-w-2xl glass-panel p-5 rounded-2xl border border-amber-500/40 text-white font-medium text-base">
-            <div class="text-amber-400 font-bold text-xs uppercase mb-1 tracking-wider" id="dialogue-speaker">PROFESSOR OAK</div>
-            <div id="dialogue-text">Welcome to the world of Pokémon!</div>
-        </div>
-
-        <div id="battle-ui" class="absolute inset-0 flex flex-col justify-between p-6 sm:p-12 hidden">
-            <div class="self-start glass-panel p-4 sm:p-6 rounded-2xl w-72 sm:w-80 border-red-500/30">
-                <div class="flex justify-between items-center mb-2">
-                    <span id="enemy-name" class="font-black text-white text-base sm:text-lg uppercase">Wild Pidgey</span>
-                    <span class="text-xs text-amber-400 font-bold">Lv. 5</span>
-                </div>
-                <div class="hp-bar-bg"><div id="enemy-hp-bar" class="hp-bar-fill"></div></div>
-            </div>
-
-            <div class="self-end flex flex-col items-end gap-4 w-full max-w-md">
-                <div class="glass-panel p-4 sm:p-6 rounded-2xl w-72 sm:w-80 border-emerald-500/30">
-                    <div class="flex justify-between items-center mb-2">
-                        <span id="player-name" class="font-black text-white text-base sm:text-lg uppercase">Bulbasaur</span>
-                        <span class="text-xs text-emerald-400 font-bold">Lv. 5</span>
-                    </div>
-                    <div class="hp-bar-bg"><div id="player-hp-bar" class="hp-bar-fill"></div></div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-3 w-full pointer-active">
-                    <button onclick="window.gameInstance.battleAction('fight')" class="py-3.5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-lg">FIGHT</button>
-                    <button onclick="window.gameInstance.battleAction('catch')" class="py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-lg">CATCH</button>
-                    <button onclick="window.gameInstance.battleAction('run')" class="py-3.5 bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white font-bold rounded-lg">RUN</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="flash-effect" class="absolute inset-0 bg-white opacity-0 pointer-events-none transition-opacity duration-150 z-40"></div>
     </div>
 
-    <script type="module">
-    import * as THREE from 'three';
-    import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-
-    class PokemonGame {
-        constructor() {
-            this.state = 'INTRO';
-            this.currentRegion = 'Pallet Town';
-            this.playerStarter = null;
-            this.followerMesh = null;
-            this.interactables = [];
-            this.encounterZones = [];
-            this.portals = [];
-            this.animatedSpawns = [];
-            this.spawnedWilds = [];
-            this.lastWildSpawnTime = 0;
-            this.inventory = []; // store special/legendary catches
-
-            this.wildMesh = null;
-            this.wildHP = 100;
-            this.playerHP = 100;
-            this.preBattleCamPos = new THREE.Vector3();
-            this.preBattleCamRot = new THREE.Euler();
-
-            this.velocity = new THREE.Vector3();
-            this.direction = new THREE.Vector3();
-            this.move = { forward: false, backward: false, left: false, right: false, sprint: false };
-            this.canJump = true;
-            this.prevTime = performance.now();
-
-            // Define region-specific pools (more realistic & varied)
-            this.regionalPools = {
-                'Pallet Town': ['Pidgey','Rattata','Sentret','Hoothoot'],
-                'Kanto': ['Pidgey','Rattata','Oddish','Bellsprout','Spearow','Zubat'],
-                'Johto': ['Sentret','Hoothoot','Natu','Spinarak','Marill'],
-                'Hoenn': ['Poochyena','Zigzagoon','Wurmple','Taillow','Wingull'],
-                'Sinnoh': ['Bidoof','Starly','Shinx','Budew'],
-                'Unova': ['Patrat','Purrloin','Blitzle','Pidove'],
-                'Kalos': ['Fletchling','Scatterbug','Froakie','Bunnelby'],
-                'Alola': ['Alolan Vulpix','Grubbin','Yungoos','Pikipek'],
-                'Galar': ['Rookidee','Skwovet','Gossifleur','Galarian Slowpoke'],
-                'Paldea': ['Lechonk','Smoliv','Korrina','Pawmi']
-            };
-
-            this.initUI();
-            this.initEngine();
-            this.initLights();
-            this.initEnvironment();
-            this.initControls();
-            this.animate();
-        }
-
-        initUI() {
-            this.ui = {
-                startScreen: document.getElementById('start-screen'),
-                btnStart: document.getElementById('btn-start-game'),
-                crosshair: document.getElementById('crosshair'),
-                locationName: document.getElementById('location-name'),
-                dialogueBox: document.getElementById('dialogue-box'),
-                dialogueText: document.getElementById('dialogue-text'),
-                dialogueSpeaker: document.getElementById('dialogue-speaker'),
-                battleUI: document.getElementById('battle-ui'),
-                flash: document.getElementById('flash-effect'),
-                enemyName: document.getElementById('enemy-name'),
-                playerName: document.getElementById('player-name'),
-                enemyHPBar: document.getElementById('enemy-hp-bar'),
-                playerHPBar: document.getElementById('player-hp-bar')
-            };
-
-            this.ui.btnStart.addEventListener('click', (event) => {
-                event.preventDefault();
-                this.ui.startScreen.style.opacity = '0';
-                setTimeout(() => { this.ui.startScreen.style.display = 'none'; }, 500);
-
-                try {
-                    if (this.controls && typeof this.controls.lock === 'function') {
-                        this.controls.lock();
-                    }
-                } catch (error) {
-                    console.error('Pointer lock failed:', error);
-                }
-            });
-
-            // Support touch on mobile
-            this.ui.btnStart.addEventListener('touchstart', (event) => {
-                event.preventDefault();
-                this.ui.btnStart.click();
-            }, { passive: false });
-        }
-
-        initEngine() {
-            this.container = document.getElementById('canvas-container');
-            this.scene = new THREE.Scene();
-            this.scene.background = new THREE.Color(0x38bdf8);
-            this.scene.fog = new THREE.FogExp2(0x38bdf8, 0.012);
-
-            this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            this.camera.position.set(0, 2, 8);
-
-            this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            this.renderer.shadowMap.enabled = true;
-            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-            this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            this.renderer.toneMappingExposure = 1.15;
-            this.container.appendChild(this.renderer.domElement);
-
-            window.addEventListener('resize', () => {
-                this.camera.aspect = window.innerWidth / window.innerHeight;
-                this.camera.updateProjectionMatrix();
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-        }
-
-        initLights() {
-            const ambient = new THREE.AmbientLight(0xffffff, 0.65);
-            this.scene.add(ambient);
-
-            const sun = new THREE.DirectionalLight(0xfff7ed, 1.3);
-            sun.position.set(50, 80, 30);
-            sun.castShadow = true;
-            sun.shadow.mapSize.width = 2048;
-            sun.shadow.mapSize.height = 2048;
-            sun.shadow.camera.near = 0.5;
-            sun.shadow.camera.far = 250;
-            const d = 60;
-            sun.shadow.camera.left = -d;
-            sun.shadow.camera.right = d;
-            sun.shadow.camera.top = d;
-            sun.shadow.camera.bottom = -d;
-            this.scene.add(sun);
-        }
-
-        getMaterials() {
-            return {
-                grass: new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.9 }),
-                dirt: new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.8 }),
-                wood: new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 }),
-                labWall: new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.4 }),
-                labRoof: new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3 }),
-                pokeballRed: new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.2 }),
-                pokeballWhite: new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 }),
-                oakHair: new THREE.MeshStandardMaterial({ color: 0x94a3b8 }),
-                oakCoat: new THREE.MeshStandardMaterial({ color: 0xf8fafc }),
-                water: new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1, transparent: true, opacity: 0.8 })
-            };
-        }
-
-        createPokeball(starterName) {
-            const group = new THREE.Group();
-            const mats = this.getMaterials();
-
-            const top = new THREE.Mesh(new THREE.SphereGeometry(0.35, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), mats.pokeballRed);
-            top.castShadow = true;
-            group.add(top);
-
-            const bot = new THREE.Mesh(new THREE.SphereGeometry(0.35, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), mats.pokeballWhite);
-            bot.castShadow = true;
-            group.add(bot);
-
-            const band = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.03, 16, 32), new THREE.MeshStandardMaterial({ color: 0x0f172a }));
-            band.rotation.x = Math.PI / 2;
-            group.add(band);
-
-            const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.06, 16), mats.pokeballWhite);
-            btn.rotation.x = Math.PI / 2;
-            btn.position.z = 0.35;
-            group.add(btn);
-
-            // invisible hit sphere used for raycast interactions
-            const hitMesh = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), new THREE.MeshBasicMaterial({ visible: false }));
-            hitMesh.userData = { starter: starterName };
-            group.add(hitMesh);
-            this.interactables.push(hitMesh);
-
-            return group;
-        }
-
-        createPokemonMesh(name) {
-            const group = new THREE.Group();
-            let mat, extraMat, mainGeo;
-
-            switch(name.toLowerCase()) {
-                case 'bulbasaur':
-                    mat = new THREE.MeshStandardMaterial({ color: 0x0d9488 });
-                    extraMat = new THREE.MeshStandardMaterial({ color: 0x16a34a });
-                    mainGeo = new THREE.BoxGeometry(0.8, 0.6, 1.0);
-                    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 16), extraMat);
-                    bulb.position.set(0, 0.5, -0.1);
-                    group.add(bulb);
-                    break;
-
-                case 'charmander':
-                    mat = new THREE.MeshStandardMaterial({ color: 0xe11d48 });
-                    extraMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706 });
-                    mainGeo = new THREE.CylinderGeometry(0.35, 0.45, 1.0, 16);
-                    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.4, 12), extraMat);
-                    flame.position.set(0, 0, -0.6);
-                    flame.rotation.x = -Math.PI / 3;
-                    group.add(flame);
-                    break;
-
-                case 'squirtle':
-                    mat = new THREE.MeshStandardMaterial({ color: 0x0284c7 });
-                    extraMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
-                    mainGeo = new THREE.BoxGeometry(0.75, 0.9, 0.75);
-                    const shell = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.3, 16), extraMat);
-                    shell.rotation.x = Math.PI / 2;
-                    shell.position.z = -0.4;
-                    group.add(shell);
-                    break;
-
-                case 'alolan vulpix':
-                    mat = new THREE.MeshStandardMaterial({ color: 0xf8fafc });
-                    extraMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.2 });
-                    mainGeo = new THREE.BoxGeometry(0.65, 0.7, 0.8);
-                    const tuft = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), extraMat);
-                    tuft.position.set(0, 0.5, 0.2);
-                    group.add(tuft);
-                    break;
-
-                case 'galarian slowpoke':
-                    mat = new THREE.MeshStandardMaterial({ color: 0xf472b6 });
-                    extraMat = new THREE.MeshStandardMaterial({ color: 0xeab308 });
-                    mainGeo = new THREE.BoxGeometry(1.0, 0.55, 1.2);
-                    const forehead = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), extraMat);
-                    forehead.position.set(0, 0.35, 0.6);
-                    group.add(forehead);
-                    break;
-
-                case 'xerneas':
-                    mat = new THREE.MeshStandardMaterial({ color: 0x0ea5b9, emissive: 0x60a5fa, emissiveIntensity: 0.6, roughness: 0.25 });
-                    mainGeo = new THREE.BoxGeometry(1.6, 1.0, 0.9);
-                    const antlerMat = new THREE.MeshStandardMaterial({ color: 0x7c3aed, emissive: 0x60a5fa, emissiveIntensity: 0.8 });
-                    const antlerLeft = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.08, 8, 16, Math.PI), antlerMat);
-                    antlerLeft.position.set(-0.6, 0.9, 0);
-                    antlerLeft.rotation.z = Math.PI / 2;
-                    group.add(antlerLeft);
-                    const antlerRight = antlerLeft.clone();
-                    antlerRight.position.set(0.6, 0.9, 0);
-                    group.add(antlerRight);
-                    break;
-
-                case 'audino':
-                    mat = new THREE.MeshStandardMaterial({ color: 0xffd1dc, emissive: 0xffe4e6, emissiveIntensity: 0.15 });
-                    mainGeo = new THREE.SphereGeometry(0.6, 12, 12);
-                    break;
-
-                default:
-                    mat = new THREE.MeshStandardMaterial({ color: 0xa0a0a0 });
-                    mainGeo = new THREE.BoxGeometry(0.7, 0.7, 0.7);
+    <!-- Logic & Audio Scripts -->
+    <script>
+        class AudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.musicPlaying = false;
+                this.currentTrack = null;
+                this.timer = null;
             }
 
-            const body = new THREE.Mesh(mainGeo, mat);
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playTone(freq, type, duration, vol = 0.1) {
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e){}
+            }
+
+            playSfx(type) {
+                this.init();
+                if (type === 'select') {
+                    this.playTone(523.25, 'sine', 0.1, 0.15); // C5
+                } else if (type === 'attack') {
+                    this.playTone(150, 'sawtooth', 0.2, 0.2);
+                    setTimeout(() => this.playTone(300, 'square', 0.15, 0.15), 50);
+                } else if (type === 'catch') {
+                    this.playTone(440, 'triangle', 0.1, 0.2);
+                    setTimeout(() => this.playTone(554.37, 'triangle', 0.1, 0.2), 100);
+                    setTimeout(() => this.playTone(659.25, 'triangle', 0.2, 0.25), 200);
+                } else if (type === 'faint') {
+                    this.playTone(200, 'sawtooth', 0.3, 0.2);
+                    setTimeout(() => this.playTone(120, 'sawtooth', 0.4, 0.2), 150);
+                }
+            }
+
+            startMusic(trackName) {
+                this.init();
+                if (this.currentTrack === trackName && this.musicPlaying) return;
+                this.stopMusic();
+                this.currentTrack = trackName;
+                this.musicPlaying = true;
+
+                let notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00];
+                if (trackName === 'battle') {
+                    notes = [150, 180, 200, 160, 220, 140];
+                } else if (trackName === 'route') {
+                    notes = [329.63, 392.00, 440.00, 493.88, 523.25];
+                }
+
+                let step = 0;
+                this.timer = setInterval(() => {
+                    if (!this.musicPlaying) return;
+                    const freq = notes[step % notes.length];
+                    this.playTone(freq, trackName === 'battle' ? 'sawtooth' : 'triangle', 0.2, 0.04);
+                    step++;
+                }, trackName === 'battle' ? 180 : 350);
+            }
+
+            stopMusic() {
+                this.musicPlaying = false;
+                if (this.timer) clearInterval(this.timer);
+            }
+        }
+
+        const audio = new AudioEngine();
+
+        const POKEMON_DATA = {
+            bulbasaur: { name: 'Bulbasaur', type: 'Grass', color: 0x10b981, hp: 20, maxHp: 20, atk: 8, moves: ['Tackle', 'Vine Whip'] },
+            charmander: { name: 'Charmander', type: 'Fire', color: 0xf97316, hp: 19, maxHp: 19, atk: 9, moves: ['Scratch', 'Ember'] },
+            squirtle: { name: 'Squirtle', type: 'Water', color: 0x06b6d4, hp: 22, maxHp: 22, atk: 7, moves: ['Tackle', 'Water Gun'] },
+            pikachu: { name: 'Pikachu', type: 'Electric', color: 0xeab308, hp: 18, maxHp: 18, atk: 10, moves: ['Quick Attack', 'Thunder Shock'] },
+            eevee: { name: 'Eevee', type: 'Normal', color: 0xb45309, hp: 21, maxHp: 21, atk: 8, moves: ['Tackle', 'Bite'] },
+            vulpix: { name: 'Alolan Vulpix', type: 'Ice', color: 0xe0f2fe, hp: 18, maxHp: 18, atk: 9, moves: ['Powder Snow', 'Ice Shard'] },
+            slowpoke: { name: 'Galarian Slowpoke', type: 'Psychic', color: 0xf472b6, hp: 25, maxHp: 25, atk: 6, moves: ['Confusion', 'Headbutt'] },
+            xerneas: { name: 'Xerneas', type: 'Fairy', color: 0x38bdf8, hp: 35, maxHp: 35, atk: 15, moves: ['Moonblast', 'Horn Leech'] }
+        };
+
+        function createDetailedPokemonMesh(key) {
+            const group = new THREE.Group();
+            const data = POKEMON_DATA[key] || POKEMON_DATA.pikachu;
+            const matMain = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.5, metalness: 0.1 });
+            const matDark = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+            const matWhite = new THREE.MeshStandardMaterial({ color: 0xffffff });
+
+            // Body Base
+            const bodyGeo = new THREE.DodecahedronGeometry(0.7, 1);
+            const body = new THREE.Mesh(bodyGeo, matMain);
             body.castShadow = true;
-            body.receiveShadow = true;
-            body.position.y = 0.4;
             group.add(body);
 
-            group.userData = { name: name, baseScale: 1.0 };
+            // Head
+            const headGeo = new THREE.SphereGeometry(0.5, 16, 16);
+            const head = new THREE.Mesh(headGeo, matMain);
+            head.position.set(0, 0.7, 0.3);
+            head.castShadow = true;
+            group.add(head);
+
+            // Eyes (Detailed)
+            const eyeGeo = new THREE.SphereGeometry(0.1, 8, 8);
+            const pupilGeo = new THREE.SphereGeometry(0.04, 8, 8);
+
+            const eyeL = new THREE.Mesh(eyeGeo, matWhite);
+            eyeL.position.set(-0.2, 0.8, 0.7);
+            const pupilL = new THREE.Mesh(pupilGeo, matDark);
+            pupilL.position.set(-0.2, 0.8, 0.78);
+
+            const eyeR = new THREE.Mesh(eyeGeo, matWhite);
+            eyeR.position.set(0.2, 0.8, 0.7);
+            const pupilR = new THREE.Mesh(pupilGeo, matDark);
+            pupilR.position.set(0.2, 0.8, 0.78);
+
+            group.add(eyeL, pupilL, eyeR, pupilR);
+
+            // Distinct Species Characteristics
+            if (key === 'charmander') {
+                // Tail Flame
+                const flameGeo = new THREE.ConeGeometry(0.2, 0.6, 8);
+                const flameMat = new THREE.MeshBasicMaterial({ color: 0xff4500 });
+                const flame = new THREE.Mesh(flameGeo, flameMat);
+                flame.position.set(0, 0.2, -0.9);
+                flame.rotation.x = -Math.PI / 4;
+                group.add(flame);
+            } else if (key === 'bulbasaur') {
+                // Plant Bulb
+                const bulbGeo = new THREE.ConeGeometry(0.4, 0.7, 6);
+                const bulbMat = new THREE.MeshStandardMaterial({ color: 0x047857 });
+                const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+                bulb.position.set(0, 0.7, -0.2);
+                bulb.rotation.x = -Math.PI / 6;
+                group.add(bulb);
+            } else if (key === 'squirtle') {
+                // Shell
+                const shellGeo = new THREE.SphereGeometry(0.75, 12, 12);
+                const shellMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
+                const shell = new THREE.Mesh(shellGeo, shellMat);
+                shell.scale.set(1, 1, 0.6);
+                shell.position.set(0, 0.1, -0.3);
+                group.add(shell);
+            } else if (key === 'pikachu') {
+                // Long Ears
+                const earGeo = new THREE.ConeGeometry(0.12, 0.6, 8);
+                const earL = new THREE.Mesh(earGeo, matMain);
+                earL.position.set(-0.35, 1.3, 0.2);
+                earL.rotation.z = 0.4;
+                const earR = new THREE.Mesh(earGeo, matMain);
+                earR.position.set(0.35, 1.3, 0.2);
+                earR.rotation.z = -0.4;
+                group.add(earL, earR);
+            } else if (key === 'xerneas') {
+                // Antlers
+                const hornGeo = new THREE.CylinderGeometry(0.04, 0.08, 1.2);
+                const hornMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xf59e0b, emissiveIntensity: 0.5 });
+                const hornL = new THREE.Mesh(hornGeo, hornMat);
+                hornL.position.set(-0.4, 1.6, 0.2);
+                hornL.rotation.z = -0.5;
+                const hornR = new THREE.Mesh(hornGeo, hornMat);
+                hornR.position.set(0.4, 1.6, 0.2);
+                hornR.rotation.z = 0.5;
+                group.add(hornL, hornR);
+            }
+
+            // Limb Spheres
+            const limbGeo = new THREE.SphereGeometry(0.18, 8, 8);
+            for (let x of [-0.4, 0.4]) {
+                for (let z of [-0.3, 0.3]) {
+                    const limb = new THREE.Mesh(limbGeo, matMain);
+                    limb.position.set(x, -0.5, z);
+                    group.add(limb);
+                }
+            }
+
             return group;
         }
 
-        initEnvironment() {
-            const mats = this.getMaterials();
+        class AdventureGame {
+            constructor() {
+                this.state = 'INTRO';
+                this.party = [];
+                this.activePokemon = null;
+                this.wildPokemon = null;
+                this.encounterZones = [];
+                this.portals = [];
+                this.sceneObjects = [];
 
-            const mainGround = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), mats.grass);
-            mainGround.rotation.x = -Math.PI / 2;
-            mainGround.receiveShadow = true;
-            this.scene.add(mainGround);
+                this.ui = {
+                    startScreen: document.getElementById('start-screen'),
+                    startBtn: document.getElementById('start-btn'),
+                    crosshair: document.getElementById('crosshair'),
+                    dialogueBox: document.getElementById('dialogue-box'),
+                    dialogueSpeaker: document.getElementById('dialogue-speaker'),
+                    dialogueText: document.getElementById('dialogue-text'),
+                    partyModal: document.getElementById('party-modal'),
+                    partyList: document.getElementById('party-list'),
+                    partyBtn: document.getElementById('party-btn'),
+                    closePartyBtn: document.getElementById('close-party-btn'),
+                    partyBadge: document.getElementById('party-count-badge'),
+                    musicBtn: document.getElementById('music-btn'),
+                    musicStatus: document.getElementById('music-status'),
+                    regionDisplay: document.getElementById('region-display'),
+                    battleUi: document.getElementById('battle-ui'),
+                    btnAttack1: document.getElementById('btn-attack-1'),
+                    btnAttack2: document.getElementById('btn-attack-2'),
+                    btnCatch: document.getElementById('btn-catch'),
+                    btnRun: document.getElementById('btn-run')
+                };
 
-            const labGroup = new THREE.Group();
-            const labBuilding = new THREE.Mesh(new THREE.BoxGeometry(14, 7, 10), mats.labWall);
-            labBuilding.position.set(0, 3.5, -12);
-            labBuilding.castShadow = labBuilding.receiveShadow = true;
-            labGroup.add(labBuilding);
+                this.move = { forward: false, backward: false, left: false, right: false };
+                this.velocity = new THREE.Vector3();
+                this.direction = new THREE.Vector3();
 
-            const labRoof = new THREE.Mesh(new THREE.ConeGeometry(11, 4, 4), mats.labRoof);
-            labRoof.position.set(0, 9, -12);
-            labRoof.rotation.y = Math.PI / 4;
-            labGroup.add(labRoof);
+                this.initScene();
+                this.initWorld();
+                this.initControls();
+                this.initEvents();
 
-            const table = new THREE.Mesh(new THREE.BoxGeometry(6, 1.2, 2.5), mats.wood);
-            table.position.set(0, 0.6, -5);
-            table.castShadow = table.receiveShadow = true;
-            labGroup.add(table);
-
-            // Starter pokéballs
-            const bulbaBall = this.createPokeball('Bulbasaur');
-            bulbaBall.position.set(-1.8, 1.5, -5);
-            labGroup.add(bulbaBall);
-
-            const charBall = this.createPokeball('Charmander');
-            charBall.position.set(0, 1.5, -5);
-            labGroup.add(charBall);
-
-            const squirtBall = this.createPokeball('Squirtle');
-            squirtBall.position.set(1.8, 1.5, -5);
-            labGroup.add(squirtBall);
-
-            const oakMesh = new THREE.Group();
-            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.45, 1.8), mats.oakCoat);
-            body.position.y = 0.9;
-            oakMesh.add(body);
-
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.35), mats.oakHair);
-            head.position.y = 2.0;
-            oakMesh.add(head);
-
-            oakMesh.position.set(0, 0, -7.5);
-            labGroup.add(oakMesh);
-            this.scene.add(labGroup);
-
-            // Regions: create grass zones using regional pools
-            this.createGrassZone(-18, -6, 20, 70, "Pallet Town", this.regionalPools['Pallet Town']);
-            this.createGrassZone(6, 18, 30, 90, "Kanto", this.regionalPools['Kanto']);
-            this.createGrassZone(120, 240, -40, 40, "Johto", this.regionalPools['Johto']);
-            this.createGrassZone(260, 380, -40, 40, "Hoenn", this.regionalPools['Hoenn']);
-            this.createGrassZone(420, 560, -40, 40, "Sinnoh", this.regionalPools['Sinnoh']);
-            this.createGrassZone(600, 680, -40, 40, "Alola", this.regionalPools['Alola']);
-            this.createGrassZone(-120, -40, -40, 40, "Galar", this.regionalPools['Galar']);
-            this.createGrassZone(-260, -140, -40, 40, "Paldea", this.regionalPools['Paldea']);
-
-            // Big named grounds (backgrounds)
-            const alolaGround = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), mats.dirt);
-            alolaGround.rotation.x = -Math.PI / 2;
-            alolaGround.position.set(600, 0.03, 0);
-            alolaGround.receiveShadow = true;
-            this.scene.add(alolaGround);
-
-            const galarGround = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.MeshStandardMaterial({ color: 0x0f766e }));
-            galarGround.rotation.x = -Math.PI / 2;
-            galarGround.position.set(-600, 0.03, 0);
-            galarGround.receiveShadow = true;
-            this.scene.add(galarGround);
-
-            // portals to move quickly between regions
-            this.createPortal(-22, 0, 15, 600, 0, 30, 0x06b6d4);
-            this.createPortal(22, 0, 15, -600, 0, 30, 0xa855f7);
-            this.createPortal(600, 0, 50, 0, 0, 20, 0xf59e0b);
-            this.createPortal(-600, 0, 50, 0, 0, 20, 0xf59e0b);
-        }
-
-        createGrassZone(xMin, xMax, zMin, zMax, regionName, pool) {
-            this.encounterZones.push({ xMin, xMax, zMin, zMax, regionName, pool });
-
-            const count = Math.max(6, Math.floor(Math.abs(xMax - xMin) * Math.abs(zMax - zMin) * 0.02));
-            const geo = new THREE.BoxGeometry(0.2, 1.2, 0.2);
-            const mat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.9 });
-            const instanced = new THREE.InstancedMesh(geo, mat, count);
-
-            const dummy = new THREE.Object3D();
-            for (let i = 0; i < count; i++) {
-                dummy.position.set(
-                    xMin + Math.random() * (xMax - xMin),
-                    0.6,
-                    zMin + Math.random() * (zMax - zMin)
-                );
-                dummy.rotation.y = Math.random() * Math.PI;
-                dummy.updateMatrix();
-                instanced.setMatrixAt(i, dummy.matrix);
+                this.animate();
             }
-            instanced.castShadow = true;
-            this.scene.add(instanced);
-        }
 
-        createPortal(sx, sy, sz, dx, dy, dz, colorHex) {
-            const group = new THREE.Group();
-            group.position.set(sx, sy + 2, sz);
+            initScene() {
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x0f172a);
+                this.scene.fog = new THREE.FogExp2(0x0f172a, 0.015);
 
-            const torus = new THREE.Mesh(new THREE.TorusGeometry(2.0, 0.25, 16, 32), new THREE.MeshBasicMaterial({ color: colorHex }));
-            group.add(torus);
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.camera.position.set(0, 1.7, 5);
 
-            const light = new THREE.PointLight(colorHex, 4, 18);
-            group.add(light);
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                document.getElementById('canvas-container').appendChild(this.renderer.domElement);
 
-            this.scene.add(group);
-            this.portals.push({ mesh: group, target: new THREE.Vector3(dx, dy, dz) });
-        }
+                // Lighting
+                const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+                this.scene.add(ambient);
 
-        initControls() {
-            this.controls = new PointerLockControls(this.camera, document.body);
+                const sun = new THREE.DirectionalLight(0xfffbeb, 1.2);
+                sun.position.set(50, 100, 50);
+                sun.castShadow = true;
+                sun.shadow.mapSize.width = 2048;
+                sun.shadow.mapSize.height = 2048;
+                this.scene.add(sun);
+            }
 
-            this.controls.addEventListener('lock', () => {
-                this.ui.crosshair.style.display = 'block';
-                if (this.state === 'INTRO') {
-                    this.showDialogue("Prof. Oak", "Welcome! Step forward and pick a Poké Ball from the table to choose your starter!");
-                }
-            });
+            initWorld() {
+                // Lab Flooring
+                const labGeo = new THREE.PlaneGeometry(60, 60);
+                const labMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
+                const labFloor = new THREE.Mesh(labGeo, labMat);
+                labFloor.rotation.x = -Math.PI / 2;
+                labFloor.receiveShadow = true;
+                this.scene.add(labFloor);
 
-            this.controls.addEventListener('unlock', () => {
-                this.ui.crosshair.style.display = 'none';
-                if (this.state !== 'BATTLE') {
-                    this.ui.startScreen.style.display = 'flex';
-                    this.ui.startScreen.style.opacity = '1';
-                }
-            });
+                // Starter Selection Table
+                const tableGeo = new THREE.BoxGeometry(6, 1.2, 2.5);
+                const tableMat = new THREE.MeshStandardMaterial({ color: 0x475569 });
+                const table = new THREE.Mesh(tableGeo, tableMat);
+                table.position.set(0, 0.6, -4);
+                table.castShadow = true;
+                this.scene.add(table);
 
-            document.addEventListener('keydown', (e) => this.onKey(e, true));
-            document.addEventListener('keyup', (e) => this.onKey(e, false));
+                // Starter Pokeballs on Table
+                const starters = ['bulbasaur', 'charmander', 'squirtle'];
+                starters.forEach((key, idx) => {
+                    const ball = new THREE.Group();
+                    const topGeo = new THREE.SphereGeometry(0.3, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+                    const topMat = new THREE.MeshStandardMaterial({ color: POKEMON_DATA[key].color });
+                    const top = new THREE.Mesh(topGeo, topMat);
 
-            const raycaster = new THREE.Raycaster();
-            document.addEventListener('mousedown', () => {
-                if (!this.controls.isLocked) return;
+                    const btmGeo = new THREE.SphereGeometry(0.3, 16, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
+                    const btmMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+                    const btm = new THREE.Mesh(btmGeo, btmMat);
 
-                // allow interacting during intro and while exploring (for secret pokeballs)
-                if (this.state === 'INTRO' || this.state === 'EXPLORE') {
+                    ball.add(top, btm);
+                    ball.position.set(-2 + idx * 2, 1.5, -4);
+                    ball.userData = { starterKey: key };
+                    this.scene.add(ball);
+                    this.sceneObjects.push(ball);
+                });
+
+                // Wild Encounter Regions
+                this.createGrassZone(-120, -20, 20, 120, 'Kanto Route 1', ['pikachu', 'eevee']);
+                this.createGrassZone(20, 120, 20, 120, 'Alola Snowy Peak', ['vulpix', 'slowpoke']);
+                this.createGrassZone(-60, 60, -120, -30, 'Kalos Forest', ['xerneas']);
+
+                // Teleportation Portals
+                this.createPortal(-20, 0, 15, -70, 0, 50, 0x10b981);
+                this.createPortal(20, 0, 15, 70, 0, 50, 0x06b6d4);
+                this.createPortal(0, 0, -25, 0, 0, -70, 0x38bdf8);
+            }
+
+            createGrassZone(xMin, xMax, zMin, zMax, regionName, pool) {
+                this.encounterZones.push({ xMin, xMax, zMin, zMax, regionName, pool });
+
+                const groundWidth = Math.abs(xMax - xMin);
+                const groundDepth = Math.abs(zMax - zMin);
+                const groundGeo = new THREE.PlaneGeometry(groundWidth, groundDepth);
+                const groundMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.9 });
+                const ground = new THREE.Mesh(groundGeo, groundMat);
+                ground.rotation.x = -Math.PI / 2;
+                ground.position.set((xMin + xMax) / 2, -0.01, (zMin + zMax) / 2);
+                ground.receiveShadow = true;
+                this.scene.add(ground);
+            }
+
+            createPortal(sx, sy, sz, dx, dy, dz, colorHex) {
+                const group = new THREE.Group();
+                group.position.set(sx, sy + 1.5, sz);
+
+                const torus = new THREE.Mesh(
+                    new THREE.TorusGeometry(1.8, 0.2, 16, 32),
+                    new THREE.MeshBasicMaterial({ color: colorHex })
+                );
+                group.add(torus);
+
+                const light = new THREE.PointLight(colorHex, 3, 15);
+                group.add(light);
+
+                this.scene.add(group);
+                this.portals.push({ mesh: group, target: new THREE.Vector3(dx, dy, dz) });
+            }
+
+            initControls() {
+                this.controls = new THREE.PointerLockControls(this.camera, document.body);
+
+                this.ui.startBtn.addEventListener('click', () => {
+                    this.controls.lock();
+                    audio.init();
+                    audio.startMusic('town');
+                });
+
+                this.controls.addEventListener('lock', () => {
+                    this.ui.startScreen.style.opacity = '0';
+                    setTimeout(() => this.ui.startScreen.style.display = 'none', 500);
+                    this.ui.crosshair.style.display = 'block';
+                    if (this.state === 'INTRO') {
+                        this.showDialogue('Prof. Oak', 'Welcome to the lab! Step up to the table and click on a Pokéball to select your starter Pokémon!');
+                    }
+                });
+
+                this.controls.addEventListener('unlock', () => {
+                    if (this.state !== 'BATTLE' && this.ui.partyModal.classList.contains('hidden')) {
+                        this.ui.startScreen.style.display = 'flex';
+                        this.ui.startScreen.style.opacity = '1';
+                        this.ui.crosshair.style.display = 'none';
+                    }
+                });
+
+                document.addEventListener('keydown', (e) => this.onKey(e, true));
+                document.addEventListener('keyup', (e) => this.onKey(e, false));
+
+                // Interaction
+                const raycaster = new THREE.Raycaster();
+                document.addEventListener('mousedown', () => {
+                    if (!this.controls.isLocked) return;
+
                     raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
-                    const hits = raycaster.intersectObjects(this.interactables);
-                    if (hits.length > 0) {
-                        const starter = hits[0].object.userData.starter;
-                        if (starter) {
-                            this.processPickup(starter, hits[0].object);
+                    const intersects = raycaster.intersectObjects(this.sceneObjects, true);
+
+                    if (intersects.length > 0) {
+                        let obj = intersects[0].object;
+                        while (obj.parent && !obj.userData.starterKey) {
+                            obj = obj.parent;
+                        }
+                        if (obj.userData.starterKey && this.party.length === 0) {
+                            this.claimStarter(obj.userData.starterKey);
                         }
                     }
-                }
-            });
-        }
-
-        processPickup(name, hitObject) {
-            const lower = String(name).toLowerCase();
-
-            // Starters selectable only during intro
-            if ((lower === 'bulbasaur' || lower === 'charmander' || lower === 'squirtle') && this.state === 'INTRO') {
-                this.selectStarter(name);
-                // remove pokeball's hit object to prevent double pickup
-                this.removeHitObject(hitObject);
-                return;
+                });
             }
 
-            // Secret / Legendary pickups allowed in Explore
-            if (lower === 'xerneas' || lower === 'audino') {
-                // avoid duplicates
-                if (this.inventory.find(p => p.toLowerCase() === lower)) {
-                    this.showDialogue('SECRET', `${name} has already been collected.`, 2000);
-                    return;
-                }
+            initEvents() {
+                this.ui.partyBtn.addEventListener('click', () => this.togglePartyModal(true));
+                this.ui.closePartyBtn.addEventListener('click', () => this.togglePartyModal(false));
 
-                // add to inventory and give player a temporary follower or stored reward
-                this.inventory.push(name);
-                this.showDialogue('SECRET', `You found ${name}! It has been added to your inventory.`, 3000);
-
-                // optional: create a small glowing mesh to represent the found Pokémon and add to scene briefly then remove
-                const mesh = this.createPokemonMesh(name);
-                mesh.position.copy(this.camera.position).add(new THREE.Vector3(0, -0.5, -3));
-                this.scene.add(mesh);
-                setTimeout(() => { this.scene.remove(mesh); }, 2500);
-
-                this.removeHitObject(hitObject);
-                return;
-            }
-
-            // Default: if in intro and pick other names, treat as starter too
-            if (this.state === 'INTRO') {
-                this.selectStarter(name);
-                this.removeHitObject(hitObject);
-                return;
-            }
-        }
-
-        removeHitObject(hitObj) {
-            try {
-                // Remove from interactables array
-                const idx = this.interactables.indexOf(hitObj);
-                if (idx >= 0) this.interactables.splice(idx, 1);
-
-                // Remove parent group if exists (the visible pokeball)
-                if (hitObj.parent) this.scene.remove(hitObj.parent);
-                else this.scene.remove(hitObj);
-            } catch (e) {
-                console.warn('Failed to fully remove hit object', e);
-            }
-        }
-
-        onKey(e, isDown) {
-            switch (e.code) {
-                case 'KeyW': case 'ArrowUp': this.move.forward = isDown; break;
-                case 'KeyS': case 'ArrowDown': this.move.backward = isDown; break;
-                case 'KeyA': case 'ArrowLeft': this.move.left = isDown; break;
-                case 'KeyD': case 'ArrowRight': this.move.right = isDown; break;
-                case 'ShiftLeft': case 'ShiftRight': this.move.sprint = isDown; break;
-                case 'Space':
-                    if (isDown && this.canJump && this.controls.isLocked) {
-                        this.velocity.y += 12;
-                        this.canJump = false;
+                this.ui.musicBtn.addEventListener('click', () => {
+                    if (audio.musicPlaying) {
+                        audio.stopMusic();
+                        this.ui.musicStatus.innerText = 'MUSIC: OFF';
+                    } else {
+                        audio.startMusic('town');
+                        this.ui.musicStatus.innerText = 'MUSIC: ON';
                     }
-                    break;
+                });
+
+                // Battle UI Controls
+                this.ui.btnAttack1.addEventListener('click', () => this.executeTurn(0));
+                this.ui.btnAttack2.addEventListener('click', () => this.executeTurn(1));
+                this.ui.btnCatch.addEventListener('click', () => this.attemptCatch());
+                this.ui.btnRun.addEventListener('click', () => this.endBattle('Escaped safely!'));
             }
-        }
 
-        showDialogue(speaker, text, duration = 4000) {
-            this.ui.dialogueSpeaker.innerText = speaker;
-            this.ui.dialogueText.innerText = text;
-            this.ui.dialogueBox.style.display = 'block';
-            if (duration > 0) {
-                setTimeout(() => { this.ui.dialogueBox.style.display = 'none'; }, duration);
-            }
-        }
-
-        selectStarter(name) {
-            this.playerStarter = name;
-            // add starter to inventory/party
-            if (!this.inventory.includes(name)) this.inventory.unshift(name);
-
-            this.showDialogue("Prof. Oak", `Ah! ${name} is a fantastic choice! Take good care of it on your journey!`);
-            this.state = 'EXPLORE';
-
-            // spawn follower
-            if (this.followerMesh) this.scene.remove(this.followerMesh);
-            this.followerMesh = this.createPokemonMesh(name);
-            this.followerMesh.position.copy(this.camera.position).add(new THREE.Vector3(0, -1.2, -3.5));
-            this.scene.add(this.followerMesh);
-        }
-
-        triggerEncounter(pool) {
-            this.state = 'BATTLE';
-            this.controls.unlock();
-
-            this.ui.flash.style.opacity = '1';
-            setTimeout(() => { this.ui.flash.style.opacity = '0'; }, 200);
-
-            // pool can be an array or a mapping with rarities — here it's an array; pick random
-            const wildName = pool[Math.floor(Math.random() * pool.length)];
-
-            this.preBattleCamPos.copy(this.camera.position);
-            this.preBattleCamRot.copy(this.camera.rotation);
-
-            this.camera.position.set(0, 3.5, 9);
-            this.camera.lookAt(0, 1, 0);
-
-            this.wildMesh = this.createPokemonMesh(wildName);
-            this.wildMesh.position.set(0, -2, -1);
-            this.scene.add(this.wildMesh);
-
-            this.animatedSpawns.push({
-                mesh: this.wildMesh,
-                targetY: 0.4,
-                startTime: performance.now(),
-                duration: 600
-            });
-
-            this.wildHP = 100;
-            this.playerHP = 100;
-
-            this.ui.enemyName.innerText = `Wild ${wildName}`;
-            this.ui.playerName.innerText = this.playerStarter || 'Starter';
-            this.ui.enemyHPBar.style.width = '100%';
-            this.ui.playerHPBar.style.width = '100%';
-
-            this.ui.battleUI.style.display = 'flex';
-        }
-
-        battleAction(action) {
-            if (action === 'fight') {
-                this.wildHP = Math.max(0, this.wildHP - (20 + Math.floor(Math.random() * 20)));
-                this.ui.enemyHPBar.style.width = `${this.wildHP}%`;
-
-                if (this.wildHP <= 0) {
-                    this.showDialogue("BATTLE", "Wild Pokémon fainted! Victory!", 2000);
-                    setTimeout(() => this.endBattle(), 2000);
-                    return;
+            onKey(event, isDown) {
+                switch (event.code) {
+                    case 'KeyW': this.move.forward = isDown; break;
+                    case 'KeyS': this.move.backward = isDown; break;
+                    case 'KeyA': this.move.left = isDown; break;
+                    case 'KeyD': this.move.right = isDown; break;
+                    case 'KeyP':
+                        if (isDown) this.togglePartyModal(this.ui.partyModal.classList.contains('hidden'));
+                        break;
                 }
-            } else if (action === 'catch') {
-                if (Math.random() > 0.4) {
-                    const caught = this.ui.enemyName.innerText.replace('Wild ', '');
-                    if (!this.inventory.includes(caught)) this.inventory.push(caught);
-                    this.showDialogue("BATTLE", "Gotcha! The wild Pokémon was caught!", 2000);
-                    setTimeout(() => this.endBattle(), 2000);
-                    return;
+            }
+
+            showDialogue(speaker, text) {
+                this.ui.dialogueSpeaker.innerText = speaker;
+                this.ui.dialogueText.innerText = text;
+                this.ui.dialogueBox.classList.remove('hidden');
+                setTimeout(() => this.ui.dialogueBox.classList.add('hidden'), 5000);
+            }
+
+            claimStarter(key) {
+                const pkmn = { ...POKEMON_DATA[key], level: 5 };
+                this.party.push(pkmn);
+                this.activePokemon = pkmn;
+                this.updatePartyUI();
+
+                audio.playSfx('catch');
+                this.showDialogue('Prof. Oak', `Congratulations! You received ${pkmn.name}! Step into the portals to explore wild routes!`);
+            }
+
+            togglePartyModal(show) {
+                if (show) {
+                    this.updatePartyUI();
+                    this.ui.partyModal.classList.remove('hidden');
+                    if (this.controls.isLocked) this.controls.unlock();
                 } else {
-                    this.showDialogue("BATTLE", "Oh no! It broke free!", 1500);
+                    this.ui.partyModal.classList.add('hidden');
                 }
-            } else if (action === 'run') {
-                this.showDialogue("BATTLE", "Got away safely!", 1500);
-                setTimeout(() => this.endBattle(), 1500);
-                return;
             }
 
-            setTimeout(() => {
-                this.playerHP = Math.max(0, this.playerHP - (10 + Math.floor(Math.random() * 15)));
-                this.ui.playerHPBar.style.width = `${this.playerHP}%`;
-                if (this.playerHP <= 0) {
-                    this.showDialogue("BATTLE", "Your Pokémon fainted! Retreating...", 2000);
-                    setTimeout(() => this.endBattle(), 2000);
-                }
-            }, 800);
-        }
+            updatePartyUI() {
+                this.ui.partyBadge.innerText = this.party.length;
+                this.ui.partyList.innerHTML = '';
 
-        endBattle() {
-            this.ui.battleUI.style.display = 'none';
-            if (this.wildMesh) this.scene.remove(this.wildMesh);
-
-            this.camera.position.copy(this.preBattleCamPos);
-            this.camera.rotation.copy(this.preBattleCamRot);
-
-            this.state = 'EXPLORE';
-            this.controls.lock();
-        }
-
-        updateLocation(name) {
-            if (this.currentRegion !== name) {
-                this.currentRegion = name;
-                this.ui.locationName.innerText = name;
-                
-                if (name === 'Alola') this.scene.background.setHex(0x0284c7);
-                else if (name === 'Galar') this.scene.background.setHex(0x334155);
-                else if (name === 'Paldea') this.scene.background.setHex(0x7c3aed);
-                else this.scene.background.setHex(0x38bdf8);
-
-                this.scene.fog.color.copy(this.scene.background);
-            }
-        }
-
-        animate() {
-            requestAnimationFrame(() => this.animate());
-
-            const time = performance.now();
-            const delta = (time - this.prevTime) / 1000;
-
-            for (let i = this.animatedSpawns.length - 1; i >= 0; i--) {
-                const anim = this.animatedSpawns[i];
-                const progress = Math.min((time - anim.startTime) / anim.duration, 1.0);
-                const easeOut = Math.sin((progress * Math.PI) / 2);
-                anim.mesh.position.y = -2 + (anim.targetY + 2) * easeOut;
-                if (progress >= 1.0) this.animatedSpawns.splice(i, 1);
+                this.party.forEach((p, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-800/80 p-4 rounded-2xl border border-slate-700 flex justify-between items-center';
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-white">${p.name}</span>
+                                <span class="text-xs bg-slate-700 px-2 py-0.5 rounded text-sky-400">Lv. ${p.level}</span>
+                            </div>
+                            <div class="text-xs text-slate-400 mt-1">Type: ${p.type}</div>
+                            <div class="text-xs font-mono text-emerald-400 mt-1">HP: ${p.hp}/${p.maxHp}</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-bold text-amber-400">ATK: ${p.atk}</span>
+                        </div>
+                    `;
+                    this.ui.partyList.appendChild(card);
+                });
             }
 
-            if (this.controls.isLocked && (this.state === 'EXPLORE' || this.state === 'INTRO')) {
-                this.velocity.x -= this.velocity.x * 10.0 * delta;
-                this.velocity.z -= this.velocity.z * 10.0 * delta;
-                this.velocity.y -= 30.0 * delta;
-
-                this.direction.z = Number(this.move.forward) - Number(this.move.backward);
-                this.direction.x = Number(this.move.right) - Number(this.move.left);
-                this.direction.normalize();
-
-                const speed = this.move.sprint ? 90.0 : 45.0;
-                if (this.move.forward || this.move.backward) this.velocity.z -= this.direction.z * speed * delta;
-                if (this.move.left || this.move.right) this.velocity.x -= this.direction.x * speed * delta;
-
-                this.controls.moveRight(-this.velocity.x * delta);
-                this.controls.moveForward(-this.velocity.z * delta);
-                this.camera.position.y += this.velocity.y * delta;
-
-                if (this.camera.position.y < 2.0) {
-                    this.velocity.y = 0;
-                    this.camera.position.y = 2.0;
-                    this.canJump = true;
-                }
-
+            checkPortalsAndZones() {
                 const pos = this.camera.position;
 
-                for (let p of this.portals) {
-                    if (pos.distanceTo(p.mesh.position) < 3.0) {
-                        this.camera.position.copy(p.target);
-                        this.showDialogue("PORTAL", "Traveled through inter-regional portal!", 2000);
+                // Portal Teleportation
+                this.portals.forEach(portal => {
+                    if (pos.distanceTo(portal.mesh.position) < 2.2) {
+                        pos.copy(portal.target);
+                        audio.playSfx('select');
                     }
-                }
+                });
 
-                let inZone = false;
-                for (let z of this.encounterZones) {
-                    if (pos.x >= z.xMin && pos.x <= z.xMax && pos.z >= z.zMin && pos.z <= z.zMax) {
-                        this.updateLocation(z.regionName);
-                        inZone = true;
-                        // more realistic encounters: only in EXPLORE and with low probability
-                        if (this.state === 'EXPLORE' && Math.random() < 0.006) {
-                            this.triggerEncounter(z.pool);
-                            break;
+                // Encounter Checking
+                let currentRegion = 'Pallet Town Lab';
+                this.encounterZones.forEach(zone => {
+                    if (pos.x >= zone.xMin && pos.x <= zone.xMax && pos.z >= zone.zMin && pos.z <= zone.zMax) {
+                        currentRegion = zone.regionName;
+                        if (this.state === 'EXPLORE' && Math.random() < 0.008 && this.party.length > 0) {
+                            const randomKey = zone.pool[Math.floor(Math.random() * zone.pool.length)];
+                            this.startBattle(randomKey);
                         }
                     }
-                }
+                });
 
-                if (!inZone) {
-                    if (pos.x > 300) this.updateLocation("Alola");
-                    else if (pos.x < -300) this.updateLocation("Galar");
-                    else this.updateLocation("Pallet Town");
-                }
-
-                if (this.followerMesh) {
-                    const targetPos = this.camera.position.clone().add(
-                        new THREE.Vector3(0, -1.2, 3.5).applyQuaternion(this.camera.quaternion)
-                    );
-                    this.followerMesh.position.lerp(targetPos, 0.08);
-                    this.followerMesh.lookAt(this.camera.position.x, this.followerMesh.position.y, this.camera.position.z);
+                if (this.ui.regionDisplay.innerText !== currentRegion) {
+                    this.ui.regionDisplay.innerText = currentRegion;
+                    audio.startMusic(currentRegion.includes('Lab') ? 'town' : 'route');
                 }
             }
 
-            this.prevTime = time;
-            this.renderer.render(this.scene, this.camera);
+            startBattle(wildKey) {
+                this.state = 'BATTLE';
+                this.controls.unlock();
+
+                const baseData = POKEMON_DATA[wildKey];
+                this.wildPokemon = { ...baseData, level: Math.floor(Math.random() * 3) + 4 };
+
+                audio.startMusic('battle');
+
+                // Render Battle Overlay
+                document.getElementById('enemy-name').innerText = this.wildPokemon.name;
+                document.getElementById('enemy-level').innerText = `Lv. ${this.wildPokemon.level}`;
+                document.getElementById('enemy-hp-text').innerText = `${this.wildPokemon.hp}/${this.wildPokemon.maxHp} HP`;
+                document.getElementById('enemy-hp-bar').style.width = '100%';
+
+                document.getElementById('player-name').innerText = this.activePokemon.name;
+                document.getElementById('player-level').innerText = `Lv. ${this.activePokemon.level}`;
+                document.getElementById('player-hp-text').innerText = `${this.activePokemon.hp}/${this.activePokemon.maxHp} HP`;
+                document.getElementById('player-hp-bar').style.width = `${(this.activePokemon.hp / this.activePokemon.maxHp) * 100}%`;
+
+                this.ui.btnAttack1.innerText = this.activePokemon.moves[0];
+                this.ui.btnAttack2.innerText = this.activePokemon.moves[1];
+
+                document.getElementById('battle-message').innerText = `A wild ${this.wildPokemon.name} appeared!`;
+                this.ui.battleUi.classList.remove('hidden');
+            }
+
+            executeTurn(moveIdx) {
+                audio.playSfx('attack');
+                const moveName = this.activePokemon.moves[moveIdx];
+                const dmg = Math.floor(this.activePokemon.atk * (1 + Math.random() * 0.4));
+                this.wildPokemon.hp = Math.max(0, this.wildPokemon.hp - dmg);
+
+                // Update Enemy Bar
+                const enemyPct = (this.wildPokemon.hp / this.wildPokemon.maxHp) * 100;
+                document.getElementById('enemy-hp-bar').style.width = `${enemyPct}%`;
+                document.getElementById('enemy-hp-text').innerText = `${this.wildPokemon.hp}/${this.wildPokemon.maxHp} HP`;
+
+                document.getElementById('battle-message').innerText = `${this.activePokemon.name} used ${moveName} for ${dmg} DMG!`;
+
+                if (this.wildPokemon.hp <= 0) {
+                    setTimeout(() => {
+                        audio.playSfx('faint');
+                        this.endBattle(`Wild ${this.wildPokemon.name} fainted!`);
+                    }, 1000);
+                    return;
+                }
+
+                // Enemy Retaliation
+                setTimeout(() => {
+                    const eDmg = Math.floor(this.wildPokemon.atk * 0.8);
+                    this.activePokemon.hp = Math.max(0, this.activePokemon.hp - eDmg);
+
+                    const playerPct = (this.activePokemon.hp / this.activePokemon.maxHp) * 100;
+                    document.getElementById('player-hp-bar').style.width = `${playerPct}%`;
+                    document.getElementById('player-hp-text').innerText = `${this.activePokemon.hp}/${this.activePokemon.maxHp} HP`;
+
+                    document.getElementById('battle-message').innerText = `${this.wildPokemon.name} attacked back for ${eDmg} DMG!`;
+                }, 1200);
+            }
+
+            attemptCatch() {
+                audio.playSfx('select');
+                document.getElementById('battle-message').innerText = 'You threw a Pokéball...';
+
+                setTimeout(() => {
+                    const catchChance = 1 - (this.wildPokemon.hp / this.wildPokemon.maxHp);
+                    if (Math.random() < catchChance + 0.3) {
+                        audio.playSfx('catch');
+                        this.party.push(this.wildPokemon);
+                        this.updatePartyUI();
+                        this.endBattle(`Gotcha! ${this.wildPokemon.name} was caught!`);
+                    } else {
+                        document.getElementById('battle-message').innerText = 'Oh no! The Pokémon broke free!';
+                    }
+                }, 1200);
+            }
+
+            endBattle(msg) {
+                document.getElementById('battle-message').innerText = msg;
+                setTimeout(() => {
+                    this.ui.battleUi.classList.add('hidden');
+                    this.state = 'EXPLORE';
+                    audio.startMusic('route');
+                }, 1500);
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+
+                // FPS Player Physics Logic
+                if (this.controls.isLocked) {
+                    this.direction.z = Number(this.move.forward) - Number(this.move.backward);
+                    this.direction.x = Number(this.move.right) - Number(this.move.left);
+                    this.direction.normalize();
+
+                    if (this.move.forward || this.move.backward) this.velocity.z -= this.direction.z * 0.03;
+                    if (this.move.left || this.move.right) this.velocity.x -= this.direction.x * 0.03;
+
+                    this.controls.moveRight(-this.velocity.x);
+                    this.controls.moveForward(-this.velocity.z);
+
+                    this.velocity.x *= 0.85;
+                    this.velocity.z *= 0.85;
+
+                    this.checkPortalsAndZones();
+                }
+
+                // Scene Object Animations
+                this.portals.forEach(p => {
+                    p.mesh.rotation.z += 0.02;
+                });
+
+                this.renderer.render(this.scene, this.camera);
+            }
         }
-    }
 
-    // Global Launch + add secret Xerneas & Audino Pokéballs into Oak's lab
-    window.addEventListener('DOMContentLoaded', () => {
-        window.gameInstance = new PokemonGame();
-
-        try {
-            const g = window.gameInstance;
-
-            // Secret Xerneas pokeball (legendary)
-            const xerneBall = g.createPokeball('Xerneas');
-            xerneBall.position.set(2.8, 1.2, -7.5); // tucked near Oak
-            xerneBall.scale.set(0.85, 0.85, 0.85);
-            if (xerneBall.children[0] && xerneBall.children[0].material) {
-                xerneBall.children[0].material.color.setHex(0x60a5fa);
-                xerneBall.children[0].material.emissive = new THREE.Color(0x1e3a8a);
-                xerneBall.children[0].material.emissiveIntensity = 0.6;
-            }
-            g.scene.add(xerneBall);
-
-            // Secret Audino pokeball (hidden healer)
-            const audinoBall = g.createPokeball('Audino');
-            audinoBall.position.set(-2.8, 1.2, -7.5);
-            audinoBall.scale.set(0.85, 0.85, 0.85);
-            if (audinoBall.children[0] && audinoBall.children[0].material) {
-                audinoBall.children[0].material.color.setHex(0xffd1dc);
-                audinoBall.children[0].material.emissive = new THREE.Color(0xffe4e6);
-                audinoBall.children[0].material.emissiveIntensity = 0.5;
-            }
-            g.scene.add(audinoBall);
-
-        } catch (err) {
-            console.error('Failed to add secret pokeballs:', err);
-        }
-    });
+        // Initialize Adventure Engine on DOM Load
+        window.onload = () => {
+            new AdventureGame();
+        };
     </script>
 </body>
 </html>
