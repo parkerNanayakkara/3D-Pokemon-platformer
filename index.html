@@ -70,7 +70,7 @@
                     <div><b class="text-amber-400">Shift:</b> Sprint</div>
                     <div><b class="text-amber-400">Space:</b> Jump</div>
                 </div>
-                <button id="btn-start-game" class="w-full py-4 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold text-lg rounded-2xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                <button id="btn-start-game" class="w-full py-4 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold text-lg rounded-2xl shadow-lg transition duration-200 active:scale-[0.99] pointer-active">
                     ENTER WORLD
                 </button>
             </div>
@@ -86,7 +86,7 @@
         </div>
 
         <!-- Dialogue Box for Oak Intro & Messages -->
-        <div id="dialogue-box" class="absolute bottom-20 left-1/2 transform -translate-x-1/2 w-[90%] max-w-2xl glass-panel p-5 rounded-2xl border border-amber-500/40 text-white font-medium text-base sm:text-lg hidden pointer-active transition-all">
+        <div id="dialogue-box" class="absolute bottom-20 left-1/2 transform -translate-x-1/2 w-[90%] max-w-2xl glass-panel p-5 rounded-2xl border border-amber-500/40 text-white font-medium text-base hidden">
             <div class="text-amber-400 font-bold text-xs uppercase mb-1 tracking-wider" id="dialogue-speaker">PROFESSOR OAK</div>
             <div id="dialogue-text">Welcome to the world of Pokémon!</div>
         </div>
@@ -114,13 +114,13 @@
 
                 <!-- Battle Commands -->
                 <div class="grid grid-cols-3 gap-3 w-full pointer-active">
-                    <button onclick="window.gameInstance.battleAction('fight')" class="py-3.5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-xl shadow-lg border border-red-400/30 transition transform hover:-translate-y-0.5">
+                    <button onclick="window.gameInstance.battleAction('fight')" class="py-3.5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-xl shadow-lg border border-red-400/30 transition">
                         FIGHT
                     </button>
-                    <button onclick="window.gameInstance.battleAction('catch')" class="py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-xl shadow-lg border border-cyan-400/30 transition transform hover:-translate-y-0.5">
+                    <button onclick="window.gameInstance.battleAction('catch')" class="py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-xl shadow-lg border border-cyan-400/30 transition">
                         CATCH
                     </button>
-                    <button onclick="window.gameInstance.battleAction('run')" class="py-3.5 bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white font-bold rounded-xl shadow-lg border border-slate-500/30 transition transform hover:-translate-y-0.5">
+                    <button onclick="window.gameInstance.battleAction('run')" class="py-3.5 bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white font-bold rounded-xl shadow-lg border border-slate-500/30 transition">
                         RUN
                     </button>
                 </div>
@@ -185,11 +185,26 @@
                     playerHPBar: document.getElementById('player-hp-bar')
                 };
 
-                this.ui.btnStart.addEventListener('click', () => {
+                this.ui.btnStart.addEventListener('click', (event) => {
+                    event.preventDefault();
                     this.ui.startScreen.style.opacity = '0';
-                    setTimeout(() => this.ui.startScreen.style.display = 'none', 500);
-                    this.controls.lock();
+                    setTimeout(() => {
+                        this.ui.startScreen.style.display = 'none';
+                    }, 500);
+
+                    try {
+                        if (this.controls && typeof this.controls.lock === 'function') {
+                            this.controls.lock();
+                        }
+                    } catch (error) {
+                        console.error('Pointer lock failed:', error);
+                    }
                 });
+
+                this.ui.btnStart.addEventListener('touchstart', (event) => {
+                    event.preventDefault();
+                    this.ui.btnStart.click();
+                }, { passive: false });
             }
 
             initEngine() {
@@ -476,7 +491,7 @@
             }
 
             initControls() {
-                this.controls = new PointerLockControls(this.camera, document.body);
+                this.controls = new PointerLockControls(this.camera, this.renderer.domElement);
 
                 this.controls.addEventListener('lock', () => {
                     this.ui.crosshair.style.display = 'block';
