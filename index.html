@@ -172,6 +172,7 @@
             this.animatedSpawns = [];
             this.spawnedWilds = [];
             this.lastWildSpawnTime = 0;
+            this.inventory = []; // store special/legendary catches
 
             this.wildMesh = null;
             this.wildHP = 100;
@@ -184,6 +185,20 @@
             this.move = { forward: false, backward: false, left: false, right: false, sprint: false };
             this.canJump = true;
             this.prevTime = performance.now();
+
+            // Define region-specific pools (more realistic & varied)
+            this.regionalPools = {
+                'Pallet Town': ['Pidgey','Rattata','Sentret','Hoothoot'],
+                'Kanto': ['Pidgey','Rattata','Oddish','Bellsprout','Spearow','Zubat'],
+                'Johto': ['Sentret','Hoothoot','Natu','Spinarak','Marill'],
+                'Hoenn': ['Poochyena','Zigzagoon','Wurmple','Taillow','Wingull'],
+                'Sinnoh': ['Bidoof','Starly','Shinx','Budew'],
+                'Unova': ['Patrat','Purrloin','Blitzle','Pidove'],
+                'Kalos': ['Fletchling','Scatterbug','Froakie','Bunnelby'],
+                'Alola': ['Alolan Vulpix','Grubbin','Yungoos','Pikipek'],
+                'Galar': ['Rookidee','Skwovet','Gossifleur','Galarian Slowpoke'],
+                'Paldea': ['Lechonk','Smoliv','Korrina','Pawmi']
+            };
 
             this.initUI();
             this.initEngine();
@@ -224,6 +239,7 @@
                 }
             });
 
+            // Support touch on mobile
             this.ui.btnStart.addEventListener('touchstart', (event) => {
                 event.preventDefault();
                 this.ui.btnStart.click();
@@ -311,6 +327,7 @@
             btn.position.z = 0.35;
             group.add(btn);
 
+            // invisible hit sphere used for raycast interactions
             const hitMesh = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), new THREE.MeshBasicMaterial({ visible: false }));
             hitMesh.userData = { starter: starterName };
             group.add(hitMesh);
@@ -372,7 +389,6 @@
                     break;
 
                 case 'xerneas':
-                    // Simple stylized Xerneas-like mesh (glowing antlers + body)
                     mat = new THREE.MeshStandardMaterial({ color: 0x0ea5b9, emissive: 0x60a5fa, emissiveIntensity: 0.6, roughness: 0.25 });
                     mainGeo = new THREE.BoxGeometry(1.6, 1.0, 0.9);
                     const antlerMat = new THREE.MeshStandardMaterial({ color: 0x7c3aed, emissive: 0x60a5fa, emissiveIntensity: 0.8 });
@@ -385,8 +401,13 @@
                     group.add(antlerRight);
                     break;
 
+                case 'audino':
+                    mat = new THREE.MeshStandardMaterial({ color: 0xffd1dc, emissive: 0xffe4e6, emissiveIntensity: 0.15 });
+                    mainGeo = new THREE.SphereGeometry(0.6, 12, 12);
+                    break;
+
                 default:
-                    mat = new THREE.MeshStandardMaterial({ color: name === 'pikachu' ? 0xeab308 : (name === 'rattata' ? 0x9333ea : 0xa16207) });
+                    mat = new THREE.MeshStandardMaterial({ color: 0xa0a0a0 });
                     mainGeo = new THREE.BoxGeometry(0.7, 0.7, 0.7);
             }
 
@@ -424,6 +445,7 @@
             table.castShadow = table.receiveShadow = true;
             labGroup.add(table);
 
+            // Starter pokéballs
             const bulbaBall = this.createPokeball('Bulbasaur');
             bulbaBall.position.set(-1.8, 1.5, -5);
             labGroup.add(bulbaBall);
@@ -449,29 +471,30 @@
             labGroup.add(oakMesh);
             this.scene.add(labGroup);
 
-            const path = new THREE.Mesh(new THREE.PlaneGeometry(8, 140), mats.dirt);
-            path.rotation.x = -Math.PI / 2;
-            path.position.set(0, 0.02, 60);
-            path.receiveShadow = true;
-            this.scene.add(path);
+            // Regions: create grass zones using regional pools
+            this.createGrassZone(-18, -6, 20, 70, "Pallet Town", this.regionalPools['Pallet Town']);
+            this.createGrassZone(6, 18, 30, 90, "Kanto", this.regionalPools['Kanto']);
+            this.createGrassZone(120, 240, -40, 40, "Johto", this.regionalPools['Johto']);
+            this.createGrassZone(260, 380, -40, 40, "Hoenn", this.regionalPools['Hoenn']);
+            this.createGrassZone(420, 560, -40, 40, "Sinnoh", this.regionalPools['Sinnoh']);
+            this.createGrassZone(600, 680, -40, 40, "Alola", this.regionalPools['Alola']);
+            this.createGrassZone(-120, -40, -40, 40, "Galar", this.regionalPools['Galar']);
+            this.createGrassZone(-260, -140, -40, 40, "Paldea", this.regionalPools['Paldea']);
 
-            this.createGrassZone(-18, -6, 20, 70, "Route 1", ['Pidgey', 'Rattata']);
-            this.createGrassZone(6, 18, 30, 90, "Route 1", ['Pikachu', 'Pidgey']);
-
+            // Big named grounds (backgrounds)
             const alolaGround = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), mats.dirt);
             alolaGround.rotation.x = -Math.PI / 2;
             alolaGround.position.set(600, 0.03, 0);
             alolaGround.receiveShadow = true;
             this.scene.add(alolaGround);
-            this.createGrassZone(560, 640, -40, 40, "Alola Region", ['Alolan Vulpix', 'Pidgey']);
 
             const galarGround = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.MeshStandardMaterial({ color: 0x0f766e }));
             galarGround.rotation.x = -Math.PI / 2;
             galarGround.position.set(-600, 0.03, 0);
             galarGround.receiveShadow = true;
             this.scene.add(galarGround);
-            this.createGrassZone(-640, -560, -40, 40, "Galar Region", ['Galarian Slowpoke', 'Rattata']);
 
+            // portals to move quickly between regions
             this.createPortal(-22, 0, 15, 600, 0, 30, 0x06b6d4);
             this.createPortal(22, 0, 15, -600, 0, 30, 0xa855f7);
             this.createPortal(600, 0, 50, 0, 0, 20, 0xf59e0b);
@@ -481,7 +504,7 @@
         createGrassZone(xMin, xMax, zMin, zMax, regionName, pool) {
             this.encounterZones.push({ xMin, xMax, zMin, zMax, regionName, pool });
 
-            const count = Math.floor(Math.abs(xMax - xMin) * Math.abs(zMax - zMin) * 0.5);
+            const count = Math.max(6, Math.floor(Math.abs(xMax - xMin) * Math.abs(zMax - zMin) * 0.02));
             const geo = new THREE.BoxGeometry(0.2, 1.2, 0.2);
             const mat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.9 });
             const instanced = new THREE.InstancedMesh(geo, mat, count);
@@ -540,15 +563,73 @@
             document.addEventListener('mousedown', () => {
                 if (!this.controls.isLocked) return;
 
-                if (this.state === 'INTRO') {
+                // allow interacting during intro and while exploring (for secret pokeballs)
+                if (this.state === 'INTRO' || this.state === 'EXPLORE') {
                     raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
                     const hits = raycaster.intersectObjects(this.interactables);
                     if (hits.length > 0) {
                         const starter = hits[0].object.userData.starter;
-                        if (starter) this.selectStarter(starter);
+                        if (starter) {
+                            this.processPickup(starter, hits[0].object);
+                        }
                     }
                 }
             });
+        }
+
+        processPickup(name, hitObject) {
+            const lower = String(name).toLowerCase();
+
+            // Starters selectable only during intro
+            if ((lower === 'bulbasaur' || lower === 'charmander' || lower === 'squirtle') && this.state === 'INTRO') {
+                this.selectStarter(name);
+                // remove pokeball's hit object to prevent double pickup
+                this.removeHitObject(hitObject);
+                return;
+            }
+
+            // Secret / Legendary pickups allowed in Explore
+            if (lower === 'xerneas' || lower === 'audino') {
+                // avoid duplicates
+                if (this.inventory.find(p => p.toLowerCase() === lower)) {
+                    this.showDialogue('SECRET', `${name} has already been collected.`, 2000);
+                    return;
+                }
+
+                // add to inventory and give player a temporary follower or stored reward
+                this.inventory.push(name);
+                this.showDialogue('SECRET', `You found ${name}! It has been added to your inventory.`, 3000);
+
+                // optional: create a small glowing mesh to represent the found Pokémon and add to scene briefly then remove
+                const mesh = this.createPokemonMesh(name);
+                mesh.position.copy(this.camera.position).add(new THREE.Vector3(0, -0.5, -3));
+                this.scene.add(mesh);
+                setTimeout(() => { this.scene.remove(mesh); }, 2500);
+
+                this.removeHitObject(hitObject);
+                return;
+            }
+
+            // Default: if in intro and pick other names, treat as starter too
+            if (this.state === 'INTRO') {
+                this.selectStarter(name);
+                this.removeHitObject(hitObject);
+                return;
+            }
+        }
+
+        removeHitObject(hitObj) {
+            try {
+                // Remove from interactables array
+                const idx = this.interactables.indexOf(hitObj);
+                if (idx >= 0) this.interactables.splice(idx, 1);
+
+                // Remove parent group if exists (the visible pokeball)
+                if (hitObj.parent) this.scene.remove(hitObj.parent);
+                else this.scene.remove(hitObj);
+            } catch (e) {
+                console.warn('Failed to fully remove hit object', e);
+            }
         }
 
         onKey(e, isDown) {
@@ -578,11 +659,16 @@
 
         selectStarter(name) {
             this.playerStarter = name;
+            // add starter to inventory/party
+            if (!this.inventory.includes(name)) this.inventory.unshift(name);
+
             this.showDialogue("Prof. Oak", `Ah! ${name} is a fantastic choice! Take good care of it on your journey!`);
             this.state = 'EXPLORE';
 
+            // spawn follower
+            if (this.followerMesh) this.scene.remove(this.followerMesh);
             this.followerMesh = this.createPokemonMesh(name);
-            this.followerMesh.position.copy(this.camera.position).add(new THREE.Vector3(0, -1, -3));
+            this.followerMesh.position.copy(this.camera.position).add(new THREE.Vector3(0, -1.2, -3.5));
             this.scene.add(this.followerMesh);
         }
 
@@ -593,6 +679,7 @@
             this.ui.flash.style.opacity = '1';
             setTimeout(() => { this.ui.flash.style.opacity = '0'; }, 200);
 
+            // pool can be an array or a mapping with rarities — here it's an array; pick random
             const wildName = pool[Math.floor(Math.random() * pool.length)];
 
             this.preBattleCamPos.copy(this.camera.position);
@@ -635,6 +722,8 @@
                 }
             } else if (action === 'catch') {
                 if (Math.random() > 0.4) {
+                    const caught = this.ui.enemyName.innerText.replace('Wild ', '');
+                    if (!this.inventory.includes(caught)) this.inventory.push(caught);
                     this.showDialogue("BATTLE", "Gotcha! The wild Pokémon was caught!", 2000);
                     setTimeout(() => this.endBattle(), 2000);
                     return;
@@ -673,8 +762,9 @@
                 this.currentRegion = name;
                 this.ui.locationName.innerText = name;
                 
-                if (name === 'Alola Region') this.scene.background.setHex(0x0284c7);
-                else if (name === 'Galar Region') this.scene.background.setHex(0x334155);
+                if (name === 'Alola') this.scene.background.setHex(0x0284c7);
+                else if (name === 'Galar') this.scene.background.setHex(0x334155);
+                else if (name === 'Paldea') this.scene.background.setHex(0x7c3aed);
                 else this.scene.background.setHex(0x38bdf8);
 
                 this.scene.fog.color.copy(this.scene.background);
@@ -732,6 +822,7 @@
                     if (pos.x >= z.xMin && pos.x <= z.xMax && pos.z >= z.zMin && pos.z <= z.zMax) {
                         this.updateLocation(z.regionName);
                         inZone = true;
+                        // more realistic encounters: only in EXPLORE and with low probability
                         if (this.state === 'EXPLORE' && Math.random() < 0.006) {
                             this.triggerEncounter(z.pool);
                             break;
@@ -740,8 +831,8 @@
                 }
 
                 if (!inZone) {
-                    if (pos.x > 300) this.updateLocation("Alola Region");
-                    else if (pos.x < -300) this.updateLocation("Galar Region");
+                    if (pos.x > 300) this.updateLocation("Alola");
+                    else if (pos.x < -300) this.updateLocation("Galar");
                     else this.updateLocation("Pallet Town");
                 }
 
@@ -759,27 +850,37 @@
         }
     }
 
-    // Global Launch + add secret Xerneas Pokéball into Oak's lab
+    // Global Launch + add secret Xerneas & Audino Pokéballs into Oak's lab
     window.addEventListener('DOMContentLoaded', () => {
         window.gameInstance = new PokemonGame();
 
-        // Add secret Xerneas Pokéball inside Oak's lab (placed near the NPC)
         try {
             const g = window.gameInstance;
+
+            // Secret Xerneas pokeball (legendary)
             const xerneBall = g.createPokeball('Xerneas');
             xerneBall.position.set(2.8, 1.2, -7.5); // tucked near Oak
             xerneBall.scale.set(0.85, 0.85, 0.85);
-            // tint the top to make it feel special
             if (xerneBall.children[0] && xerneBall.children[0].material) {
                 xerneBall.children[0].material.color.setHex(0x60a5fa);
                 xerneBall.children[0].material.emissive = new THREE.Color(0x1e3a8a);
                 xerneBall.children[0].material.emissiveIntensity = 0.6;
             }
             g.scene.add(xerneBall);
-            // mark hit mesh as secret (optional)
-            xerneBall.children.forEach(c => { if (c.userData && c.userData.starter === 'Xerneas') c.userData.secret = true; });
+
+            // Secret Audino pokeball (hidden healer)
+            const audinoBall = g.createPokeball('Audino');
+            audinoBall.position.set(-2.8, 1.2, -7.5);
+            audinoBall.scale.set(0.85, 0.85, 0.85);
+            if (audinoBall.children[0] && audinoBall.children[0].material) {
+                audinoBall.children[0].material.color.setHex(0xffd1dc);
+                audinoBall.children[0].material.emissive = new THREE.Color(0xffe4e6);
+                audinoBall.children[0].material.emissiveIntensity = 0.5;
+            }
+            g.scene.add(audinoBall);
+
         } catch (err) {
-            console.error('Failed to add secret Xerneas ball:', err);
+            console.error('Failed to add secret pokeballs:', err);
         }
     });
     </script>
