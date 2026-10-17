@@ -3,69 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Pokémon Adventure</title>
+    <title>3D Pokémon: Let's Go! Edition (1025 Dex)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; user-select: none; background: #090d16; }
+        body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; user-select: none; background: #38bdf8; }
         #canvas-container { width: 100vw; height: 100vh; }
-        .hud-glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); }
-        .glow-text { text-shadow: 0 0 12px rgba(59, 130, 246, 0.8); }
-        .pixel-border { border: 2px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+        .hud-glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 2px solid rgba(59, 130, 246, 0.3); color: #0f172a; }
+        .glow-text { text-shadow: 0 0 12px rgba(59, 130, 246, 0.5); }
+        .pixel-border { border: 3px solid #3b82f6; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); }
     </style>
 </head>
-<body class="bg-slate-950 text-white">
+<body class="bg-sky-400 text-slate-900">
 
     <div id="canvas-container"></div>
 
+    <!-- Crosshair -->
     <div id="crosshair" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden z-20">
-        <div class="w-3 h-3 bg-white/90 rounded-full border border-slate-900 shadow-lg"></div>
+        <div class="w-3.5 h-3.5 bg-white rounded-full border-2 border-blue-600 shadow-md"></div>
     </div>
 
     <!-- Top HUD -->
     <div id="top-hud" class="fixed top-4 left-4 right-4 flex justify-between items-center z-10 pointer-events-none">
-        <div class="hud-glass px-4 py-2 rounded-xl flex items-center space-x-3 pointer-events-auto shadow-lg">
-            <div class="w-3 h-3 bg-emerald-400 rounded-full animate-ping"></div>
-            <span id="region-display" class="font-bold tracking-wide text-emerald-400 text-sm uppercase">Pallet Town Lab</span>
+        <div class="hud-glass px-4 py-2 rounded-2xl flex items-center space-x-3 pointer-events-auto shadow-xl">
+            <div class="w-3 h-3 bg-emerald-500 rounded-full animate-ping"></div>
+            <span id="region-display" class="font-extrabold tracking-wide text-emerald-700 text-sm uppercase">Pallet Town Lab</span>
         </div>
 
         <div class="flex items-center space-x-3 pointer-events-auto">
-            <div id="inventory-badge" class="hud-glass px-3 py-2 rounded-xl flex items-center space-x-2 text-amber-300 font-bold text-xs shadow-lg">
-                <i class="fas fa-box text-amber-400"></i>
-                <span id="ball-count-text">Inventory Updated</span>
+            <div id="inventory-badge" class="hud-glass px-3 py-2 rounded-2xl flex items-center space-x-2 text-slate-800 font-bold text-xs shadow-xl">
+                <i class="fas fa-baseball-ball text-red-500"></i>
+                <span id="ball-count-text">Bag Ready</span>
             </div>
-            <button id="music-btn" class="hud-glass p-3 rounded-xl hover:bg-slate-800/80 transition flex items-center justify-center text-amber-400 shadow-lg">
-                <i class="fas me-2 fa-music"></i> <span id="music-status" class="text-xs font-bold">MUSIC: OFF</span>
+            <button id="pokedex-btn" class="hud-glass px-4 py-2.5 rounded-2xl hover:bg-white transition flex items-center space-x-2 text-emerald-700 font-bold text-sm shadow-xl">
+                <i class="fas fa-book-open"></i>
+                <span>CAUGHT (D)</span>
+                <span id="pokedex-count-badge" class="bg-emerald-500 text-white px-2 py-0.5 rounded-full text-xs ml-1 font-extrabold">0</span>
             </button>
-            <button id="party-btn" class="hud-glass px-4 py-2.5 rounded-xl hover:bg-slate-800/80 transition flex items-center space-x-2 text-sky-400 font-bold text-sm shadow-lg">
+            <button id="music-btn" class="hud-glass p-3 rounded-2xl hover:bg-white transition flex items-center justify-center text-amber-600 shadow-xl">
+                <i class="fas me-2 fa-music"></i> <span id="music-status" class="text-xs font-extrabold">MUSIC: OFF</span>
+            </button>
+            <button id="party-btn" class="hud-glass px-4 py-2.5 rounded-2xl hover:bg-white transition flex items-center space-x-2 text-blue-600 font-bold text-sm shadow-xl">
                 <i class="fas fa-th-list"></i>
                 <span>PARTY (P)</span>
-                <span id="party-count-badge" class="bg-sky-500 text-slate-950 px-2 py-0.5 rounded-full text-xs ml-1 font-extrabold">0</span>
+                <span id="party-count-badge" class="bg-blue-600 text-white px-2 py-0.5 rounded-full text-xs ml-1 font-extrabold">0</span>
             </button>
         </div>
     </div>
 
     <!-- Start Overlay -->
-    <div id="start-screen" class="fixed inset-0 bg-slate-950/90 z-30 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-500">
-        <div class="max-w-md w-full hud-glass p-8 rounded-3xl pixel-border">
+    <div id="start-screen" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-30 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-500">
+        <div class="max-w-md w-full bg-slate-900 text-white p-8 rounded-3xl pixel-border">
             <div class="w-20 h-20 bg-red-500 rounded-full mx-auto mb-6 flex items-center justify-center border-4 border-slate-900 shadow-xl relative">
                 <div class="w-full h-2 bg-slate-900 absolute"></div>
                 <div class="w-8 h-8 bg-white rounded-full border-4 border-slate-900 z-10 flex items-center justify-center">
                     <div class="w-3 h-3 bg-slate-400 rounded-full"></div>
                 </div>
             </div>
-            <h1 class="text-3xl font-extrabold tracking-tight text-white mb-2 glow-text">POKÉMON ADVENTURE 3D</h1>
-            <p class="text-slate-300 text-sm mb-6">Explore Oak's Lab, uncover hidden Pokéballs like the Luxury Ball and Friend Ball, and explore the wild regions!</p>
-            <button id="start-btn" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-lg transform active:scale-95 transition">
-                CLICK TO ENTER WORLD
+            <h1 class="text-2xl font-black tracking-tight text-white mb-2 glow-text">PONTÉMON: LET'S GO!</h1>
+            <p class="text-slate-300 text-sm mb-6">Experience 3D Pokémon with visible overworld roaming Pokémon, all 1,025 entries, and secret lab finds!</p>
+            <button id="start-btn" class="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-extrabold rounded-2xl shadow-lg transform active:scale-95 transition">
+                CLICK TO START ADVENTURE
             </button>
         </div>
     </div>
 
     <!-- Dialogue Box -->
-    <div id="dialogue-box" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl hud-glass p-5 rounded-2xl hidden z-20 transition-all border-l-4 border-l-blue-500 shadow-2xl">
+    <div id="dialogue-box" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl bg-slate-900 text-white p-5 rounded-2xl hidden z-20 transition-all border-l-4 border-l-blue-500 shadow-2xl">
         <h3 id="dialogue-speaker" class="text-xs font-bold uppercase tracking-wider text-blue-400 mb-1">Prof. Oak</h3>
         <p id="dialogue-text" class="text-sm md:text-base text-slate-100 leading-relaxed"></p>
         <div class="text-right mt-2">
@@ -74,8 +80,8 @@
     </div>
 
     <!-- Party Menu Modal -->
-    <div id="party-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-40 hidden flex items-center justify-center p-4">
-        <div class="max-w-3xl w-full hud-glass rounded-3xl p-6 border border-slate-700 shadow-2xl">
+    <div id="party-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-40 hidden flex items-center justify-center p-4 text-white">
+        <div class="max-w-3xl w-full bg-slate-900 rounded-3xl p-6 border border-slate-700 shadow-2xl">
             <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
                 <div class="flex items-center space-x-3">
                     <i class="fas fa-boxes text-sky-400 text-xl"></i>
@@ -90,11 +96,31 @@
         </div>
     </div>
 
-    <!-- Battle Overlay UI -->
-    <div id="battle-ui" class="fixed inset-0 z-30 hidden pointer-events-none flex flex-col justify-between p-6">
-        <div class="self-start pointer-events-auto hud-glass p-4 rounded-2xl w-72 border-l-4 border-l-rose-500 shadow-xl">
+    <!-- Pokédex Menu Modal -->
+    <div id="pokedex-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-40 hidden flex items-center justify-center p-4 text-white">
+        <div class="max-w-4xl w-full bg-slate-900 rounded-3xl p-6 border border-emerald-500/30 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-book-open text-emerald-400 text-xl"></i>
+                    <div>
+                        <h2 class="text-xl font-bold tracking-wide">CAUGHT COLLECTION (NATIONAL DEX)</h2>
+                        <p class="text-xs text-slate-400">All 1,025 Pokémon registered in your collection</p>
+                    </div>
+                </div>
+                <button id="close-pokedex-btn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="pokedex-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto pr-2">
+            </div>
+        </div>
+    </div>
+
+    <!-- Battle / Catch Overlay UI -->
+    <div id="battle-ui" class="fixed inset-0 z-30 hidden pointer-events-none flex flex-col justify-between p-6 text-white">
+        <div class="self-start pointer-events-auto bg-slate-900 p-4 rounded-2xl w-72 border-l-4 border-l-rose-500 shadow-xl">
             <div class="flex justify-between items-center mb-1">
-                <span id="enemy-name" class="font-bold text-white uppercase text-sm">Wild Pokémon</span>
+                <span id="enemy-name" class="font-bold uppercase text-sm">Wild Pokémon</span>
                 <span id="enemy-level" class="text-xs text-slate-400 font-semibold">Lv. 5</span>
             </div>
             <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-700">
@@ -103,9 +129,9 @@
             <div class="text-right text-[10px] text-slate-400 mt-1 font-mono" id="enemy-hp-text">20/20 HP</div>
         </div>
 
-        <div class="self-end pointer-events-auto hud-glass p-4 rounded-2xl w-72 border-r-4 border-r-emerald-500 shadow-xl">
+        <div class="self-end pointer-events-auto bg-slate-900 p-4 rounded-2xl w-72 border-r-4 border-r-emerald-500 shadow-xl">
             <div class="flex justify-between items-center mb-1">
-                <span id="player-name" class="font-bold text-white uppercase text-sm">Pikachu</span>
+                <span id="player-name" class="font-bold uppercase text-sm">Pikachu</span>
                 <span id="player-level" class="text-xs text-slate-400 font-semibold">Lv. 5</span>
             </div>
             <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-700">
@@ -114,26 +140,26 @@
             <div class="text-right text-[10px] text-slate-400 mt-1 font-mono" id="player-hp-text">22/22 HP</div>
         </div>
 
-        <div class="self-center w-full max-w-xl pointer-events-auto hud-glass p-4 rounded-2xl shadow-2xl border border-slate-700">
+        <div class="self-center w-full max-w-xl pointer-events-auto bg-slate-900 p-4 rounded-2xl shadow-2xl border border-slate-700">
             <div id="battle-message" class="text-center font-semibold text-slate-200 text-sm mb-3 min-h-[1.25rem]">
-                What will your Pokémon do?
+                What will you do?
             </div>
             <div id="battle-actions" class="grid grid-cols-2 gap-3 mb-3">
-                <button id="btn-attack-1" class="py-3 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow">
+                <button id="btn-attack-1" class="py-3 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 font-bold rounded-xl text-xs uppercase tracking-wider transition shadow">
                     Tackle
                 </button>
-                <button id="btn-attack-2" class="py-3 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow">
+                <button id="btn-attack-2" class="py-3 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 font-bold rounded-xl text-xs uppercase tracking-wider transition shadow">
                     Special Move
                 </button>
-                <button id="btn-catch" class="py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow">
+                <button id="btn-catch" class="py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-bold rounded-xl text-xs uppercase tracking-wider transition shadow">
                     Throw Ball
                 </button>
-                <button id="btn-run" class="py-3 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow">
+                <button id="btn-run" class="py-3 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 font-bold rounded-xl text-xs uppercase tracking-wider transition shadow">
                     Run Away
                 </button>
             </div>
-            <!-- Expanded Ball Selector -->
-            <div class="flex flex-wrap justify-between items-center bg-slate-900/60 p-2 rounded-xl border border-slate-800 gap-1">
+            <!-- Ball Selector -->
+            <div class="flex flex-wrap justify-between items-center bg-slate-950 p-2 rounded-xl border border-slate-800 gap-1">
                 <span class="text-xs text-slate-400 font-bold uppercase w-full mb-1">Select Ball:</span>
                 <div class="flex flex-wrap gap-1" id="ball-selector-buttons">
                     <button data-ball="pokeball" class="px-2 py-1 bg-red-600 text-[10px] font-bold rounded transition ring-2 ring-red-400">Poké (<span id="count-pokeball">5</span>)</button>
@@ -156,13 +182,9 @@
                 this.musicPlaying = false;
                 this.timer = null;
             }
-
             init() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                }
+                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
             }
-
             playTone(freq, type, duration, vol = 0.1) {
                 if (!this.ctx) return;
                 try {
@@ -178,37 +200,29 @@
                     osc.stop(this.ctx.currentTime + duration);
                 } catch(e){}
             }
-
             playSfx(type) {
                 this.init();
-                if (type === 'select') {
-                    this.playTone(523.25, 'sine', 0.1, 0.15);
-                } else if (type === 'attack') {
-                    this.playTone(150, 'sawtooth', 0.2, 0.2);
-                } else if (type === 'catch') {
+                if (type === 'select') this.playTone(523.25, 'sine', 0.1, 0.15);
+                else if (type === 'attack') this.playTone(150, 'sawtooth', 0.2, 0.2);
+                else if (type === 'catch') {
                     this.playTone(440, 'triangle', 0.1, 0.2);
                     setTimeout(() => this.playTone(659.25, 'triangle', 0.3, 0.25), 150);
-                } else if (type === 'item') {
-                    this.playTone(600, 'sine', 0.1, 0.2);
-                    setTimeout(() => this.playTone(850, 'sine', 0.15, 0.2), 80);
                 }
             }
-
             startMusic() {
                 this.init();
                 if (this.musicPlaying) return;
                 this.musicPlaying = true;
-                const chords = [[261.63, 329.63, 392.00], [220.00, 261.63, 329.63]];
+                const chords = [[329.63, 392.00, 440.00], [261.63, 329.63, 392.00]];
                 let chordIdx = 0, noteStep = 0;
                 this.timer = setInterval(() => {
                     if (!this.musicPlaying) return;
                     const chord = chords[chordIdx];
-                    this.playTone(chord[noteStep % chord.length], 'triangle', 0.4, 0.025);
+                    this.playTone(chord[noteStep % chord.length], 'triangle', 0.3, 0.02);
                     noteStep++;
                     if (noteStep >= 4) { noteStep = 0; chordIdx = (chordIdx + 1) % chords.length; }
-                }, 400);
+                }, 350);
             }
-
             stopMusic() {
                 this.musicPlaying = false;
                 if (this.timer) clearInterval(this.timer);
@@ -217,23 +231,67 @@
 
         const audio = new AudioEngine();
 
-        const POKEMON_DATA = {
-            bulbasaur: { name: 'Bulbasaur', type: 'Grass', color: 0x16a34a, hp: 20, maxHp: 20, atk: 8, rarity: 'starter', weight: 'light', moves: ['Tackle', 'Vine Whip'] },
-            charmander: { name: 'Charmander', type: 'Fire', color: 0xea580c, hp: 19, maxHp: 19, atk: 9, rarity: 'starter', weight: 'light', moves: ['Scratch', 'Ember'] },
-            squirtle: { name: 'Squirtle', type: 'Water', color: 0x0891b2, hp: 22, maxHp: 22, atk: 7, rarity: 'starter', weight: 'light', moves: ['Tackle', 'Water Gun'] },
-            pikachu: { name: 'Pikachu', type: 'Electric', color: 0xca8a04, hp: 18, maxHp: 18, atk: 10, rarity: 'common', weight: 'light', moves: ['Quick Attack', 'Thunder Shock'] },
-            audino: { name: 'Audino', type: 'Normal', color: 0xf472b6, hp: 35, maxHp: 35, atk: 10, rarity: 'rare', weight: 'medium', moves: ['Pound', 'Heal Pulse'] },
-            mewtwo: { name: 'Mewtwo', type: 'Psychic', color: 0x9333ea, hp: 50, maxHp: 50, atk: 22, rarity: 'legendary', weight: 'heavy', moves: ['Psystrike', 'Aura Sphere'] },
-            xerneas: { name: 'Xerneas', type: 'Fairy', color: 0x0284c7, hp: 55, maxHp: 55, atk: 20, rarity: 'legendary', weight: 'heavy', moves: ['Moonblast', 'Horn Leech'] }
-        };
+        class NationalDex {
+            static getPokemon(identifier) {
+                const manualRegistry = {
+                    bulbasaur: { id: 1, name: 'Bulbasaur', type: 'Grass', color: 0x16a34a, hp: 20, maxHp: 20, atk: 8, rarity: 'starter', weight: 'light', moves: ['Tackle', 'Vine Whip'] },
+                    charmander: { id: 4, name: 'Charmander', type: 'Fire', color: 0xea580c, hp: 19, maxHp: 19, atk: 9, rarity: 'starter', weight: 'light', moves: ['Scratch', 'Ember'] },
+                    squirtle: { id: 7, name: 'Squirtle', type: 'Water', color: 0x0891b2, hp: 22, maxHp: 22, atk: 7, rarity: 'starter', weight: 'light', moves: ['Tackle', 'Water Gun'] },
+                    pikachu: { id: 25, name: 'Pikachu', type: 'Electric', color: 0xca8a04, hp: 18, maxHp: 18, atk: 10, rarity: 'common', weight: 'light', moves: ['Quick Attack', 'Thunder Shock'] },
+                    audino: { id: 531, name: 'Audino', type: 'Normal', color: 0xf472b6, hp: 35, maxHp: 35, atk: 10, rarity: 'rare', weight: 'medium', moves: ['Pound', 'Heal Pulse'] },
+                    mewtwo: { id: 150, name: 'Mewtwo', type: 'Psychic', color: 0x9333ea, hp: 50, maxHp: 50, atk: 22, rarity: 'legendary', weight: 'heavy', moves: ['Psystrike', 'Aura Sphere'] },
+                    xerneas: { id: 716, name: 'Xerneas', type: 'Fairy', color: 0x0284c7, hp: 55, maxHp: 55, atk: 20, rarity: 'legendary', weight: 'heavy', moves: ['Moonblast', 'Horn Leech'] }
+                };
+
+                if (typeof identifier === 'string' && manualRegistry[identifier]) {
+                    return manualRegistry[identifier];
+                }
+
+                const dexNum = typeof identifier === 'number' ? identifier : Math.floor(Math.random() * 1025) + 1;
+                const types = ['Normal', 'Fire', 'Water', 'Grass', 'Electric', 'Ice', 'Fighting', 'Poison', 'Ground', 'Flying', 'Psychic', 'Bug', 'Rock', 'Ghost', 'Dragon', 'Steel', 'Fairy'];
+                const colors = [0x94a3b8, 0xef4444, 0x3b82f6, 0x22c55e, 0xeab308, 0xec4899, 0x8b5cf6, 0x14b8a6];
+                
+                return {
+                    id: dexNum,
+                    name: `Pokémon #${dexNum}`,
+                    type: types[dexNum % types.length],
+                    color: colors[dexNum % colors.length],
+                    hp: 20 + (dexNum % 20),
+                    maxHp: 20 + (dexNum % 20),
+                    atk: 8 + (dexNum % 10),
+                    rarity: dexNum > 1000 ? 'legendary' : 'common',
+                    weight: dexNum % 2 === 0 ? 'heavy' : 'light',
+                    moves: ['Tackle', 'Quick Attack']
+                };
+            }
+        }
 
         function createDetailedPokemonMesh(key) {
             const group = new THREE.Group();
-            const data = POKEMON_DATA[key] || POKEMON_DATA.pikachu;
-            const matMain = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.5 });
-            const body = new THREE.Mesh(new THREE.SphereGeometry(0.65, 16, 16), matMain);
+            const data = NationalDex.getPokemon(key);
+            
+            const matMain = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.2, metalness: 0.1 });
+            const matWhite = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1 });
+
+            const bodyGeo = new THREE.SphereGeometry(0.65, 32, 32);
+            bodyGeo.scale(1, 0.9, 1.1);
+            const body = new THREE.Mesh(bodyGeo, matMain);
             body.position.y = 0.65;
+            body.castShadow = true;
             group.add(body);
+
+            const headGeo = new THREE.SphereGeometry(0.48, 32, 32);
+            const head = new THREE.Mesh(headGeo, matMain);
+            head.position.set(0, 1.2, 0.3);
+            group.add(head);
+
+            const eyeGeo = new THREE.SphereGeometry(0.08, 16, 16);
+            const eyeL = new THREE.Mesh(eyeGeo, matWhite);
+            eyeL.position.set(-0.18, 1.28, 0.7);
+            const eyeR = new THREE.Mesh(eyeGeo, matWhite);
+            eyeR.position.set(0.18, 1.28, 0.7);
+            group.add(eyeL, eyeR);
+
             group.userData = { key: key };
             return group;
         }
@@ -242,12 +300,13 @@
             constructor() {
                 this.state = 'INTRO';
                 this.party = [];
+                this.caughtPokedex = {};
                 this.inventory = { pokeball: 5, greatball: 2, ultraball: 1, masterball: 1, friendball: 1, heavyball: 1, nestball: 1, luxuryball: 1 };
                 this.selectedBallType = 'pokeball';
                 this.activePokemon = null;
                 this.wildPokemon = null;
-                this.encounterZones = [];
                 this.sceneObjects = [];
+                this.overworldRoaming = [];
 
                 this.ui = {
                     startScreen: document.getElementById('start-screen'),
@@ -261,6 +320,11 @@
                     partyBtn: document.getElementById('party-btn'),
                     closePartyBtn: document.getElementById('close-party-btn'),
                     partyBadge: document.getElementById('party-count-badge'),
+                    pokedexModal: document.getElementById('pokedex-modal'),
+                    pokedexList: document.getElementById('pokedex-list'),
+                    pokedexBtn: document.getElementById('pokedex-btn'),
+                    closePokedexBtn: document.getElementById('close-pokedex-btn'),
+                    pokedexBadge: document.getElementById('pokedex-count-badge'),
                     musicBtn: document.getElementById('music-btn'),
                     musicStatus: document.getElementById('music-status'),
                     regionDisplay: document.getElementById('region-display'),
@@ -284,8 +348,8 @@
 
             initScene() {
                 this.scene = new THREE.Scene();
-                this.scene.background = new THREE.Color(0x0b132b);
-                this.scene.fog = new THREE.FogExp2(0x0b132b, 0.005);
+                this.scene.background = new THREE.Color(0x7dd3fc); // Bright, cheerful Let's Go sky
+                this.scene.fog = new THREE.FogExp2(0x7dd3fc, 0.003);
 
                 this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 this.camera.position.set(0, 1.8, 5);
@@ -294,43 +358,42 @@
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
                 this.renderer.shadowMap.enabled = true;
                 this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1.0;
+                this.renderer.toneMappingExposure = 1.2;
                 document.getElementById('canvas-container').appendChild(this.renderer.domElement);
 
-                const ambient = new THREE.AmbientLight(0x38bdf8, 0.35);
+                const ambient = new THREE.AmbientLight(0xffffff, 1.0);
                 this.scene.add(ambient);
 
-                const sun = new THREE.DirectionalLight(0xffedd5, 1.4);
-                sun.position.set(90, 120, 60);
+                const sun = new THREE.DirectionalLight(0xfffbeb, 1.8);
+                sun.position.set(60, 100, 50);
                 sun.castShadow = true;
                 this.scene.add(sun);
             }
 
             initWorld() {
+                // Bright Laboratory Floor
                 const labFloor = new THREE.Mesh(
                     new THREE.PlaneGeometry(60, 60),
-                    new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 })
+                    new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.2 })
                 );
                 labFloor.rotation.x = -Math.PI / 2;
                 this.scene.add(labFloor);
 
-                // Lab Structure
                 const building = new THREE.Mesh(
                     new THREE.BoxGeometry(24, 10, 20),
-                    new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 })
+                    new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.3 })
                 );
                 building.position.set(0, 5, -10);
                 this.scene.add(building);
 
-                // Starter Selection Table
                 const table = new THREE.Mesh(
                     new THREE.BoxGeometry(6, 1.2, 2.5),
-                    new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5 })
+                    new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.3 })
                 );
                 table.position.set(0, 0.6, -4);
                 this.scene.add(table);
 
-                // Main Starter Pokéballs
+                // Starters
                 ['bulbasaur', 'charmander', 'squirtle'].forEach((key, idx) => {
                     const ball = this.createPokeballMesh(0xdc2626);
                     ball.position.set(-2 + idx * 2, 1.5, -4);
@@ -339,39 +402,56 @@
                     this.sceneObjects.push(ball);
                 });
 
-                // Hidden Special Pokéballs in Oak's Lab
-                const luxuryBall = this.createPokeballMesh(0x111827); // Luxury Ball (Black/Gold)
+                // Secret Luxury Ball (Xerneas) & Friend Ball (Audino) in Lab
+                const luxuryBall = this.createPokeballMesh(0x111827);
                 luxuryBall.position.set(-8, 1.2, -12);
                 luxuryBall.userData = { starterKey: 'xerneas', label: 'Luxury Ball containing Xerneas' };
                 this.scene.add(luxuryBall);
                 this.sceneObjects.push(luxuryBall);
 
-                const friendBall = this.createPokeballMesh(0x059669); // Friend Ball (Green)
+                const friendBall = this.createPokeballMesh(0x059669);
                 friendBall.position.set(8, 1.2, -12);
                 friendBall.userData = { starterKey: 'audino', label: 'Friend Ball containing Audino' };
                 this.scene.add(friendBall);
                 this.sceneObjects.push(friendBall);
 
-                this.createGrassZone(-120, -20, 20, 120, 'Kanto Route 1', ['pikachu'], 0x14532d);
+                // Overworld Roaming Route 1 (Let's Go Style!)
+                this.createGrassZone(-100, -20, 20, 100, 'Route 1 (Overworld Roaming)', 0x22c55e);
+                this.spawnOverworldRoamingPokemon(25, -45, 30);
+                this.spawnOverworldRoamingPokemon(150, -35, 60);
+                this.spawnOverworldRoamingPokemon(730, -60, 40);
             }
 
             createPokeballMesh(colorHex) {
                 const group = new THREE.Group();
                 const top = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: colorHex }));
-                const btm = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xf8fafc }));
+                const btm = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xffffff }));
                 group.add(top, btm);
                 return group;
             }
 
-            createGrassZone(xMin, xMax, zMin, zMax, regionName, pool, colorHex) {
-                this.encounterZones.push({ xMin, xMax, zMin, zMax, regionName, pool });
+            createGrassZone(xMin, xMax, zMin, zMax, regionName, colorHex) {
                 const ground = new THREE.Mesh(
                     new THREE.PlaneGeometry(Math.abs(xMax - xMin), Math.abs(zMax - zMin)),
-                    new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.85 })
+                    new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.6 })
                 );
                 ground.rotation.x = -Math.PI / 2;
                 ground.position.set((xMin + xMax) / 2, -0.01, (zMin + zMax) / 2);
                 this.scene.add(ground);
+            }
+
+            spawnOverworldRoamingPokemon(dexId, x, z) {
+                const mesh = createDetailedPokemonMesh(dexId);
+                mesh.position.set(x, 0, z);
+                this.scene.add(mesh);
+                this.sceneObjects.push(mesh);
+                this.overworldRoaming.push({
+                    mesh: mesh,
+                    dexId: dexId,
+                    originX: x,
+                    originZ: z,
+                    angle: Math.random() * Math.PI * 2
+                });
             }
 
             initControls() {
@@ -383,6 +463,7 @@
                     if (e.code === 'KeyA') this.move.left = true;
                     if (e.code === 'KeyD') this.move.right = true;
                     if (e.code === 'KeyP') this.togglePartyModal();
+                    if (e.code === 'KeyD' && !this.move.right) this.togglePokedexModal();
                 });
                 document.addEventListener('keyup', (e) => {
                     if (e.code === 'KeyW') this.move.forward = false;
@@ -400,7 +481,7 @@
                     this.state = 'EXPLORING';
                     audio.startMusic();
                     this.ui.musicStatus.textContent = "MUSIC: ON";
-                    this.showDialogue("Prof. Oak", "Explore the lab to find hidden Pokéballs or select your starter!");
+                    this.showDialogue("Prof. Oak", "Welcome to your Let's Go adventure! Approach roaming Pokémon in the overworld or check the lab.");
                 });
 
                 this.ui.musicBtn.addEventListener('click', () => {
@@ -410,6 +491,9 @@
 
                 this.ui.partyBtn.addEventListener('click', () => this.togglePartyModal());
                 this.ui.closePartyBtn.addEventListener('click', () => this.ui.partyModal.classList.add('hidden'));
+
+                this.ui.pokedexBtn.addEventListener('click', () => this.togglePokedexModal());
+                this.ui.closePokedexBtn.addEventListener('click', () => this.ui.pokedexModal.classList.add('hidden'));
 
                 document.querySelectorAll('#ball-selector-buttons button').forEach(btn => {
                     btn.addEventListener('click', () => {
@@ -426,7 +510,6 @@
                         this.controls.lock();
                         return;
                     }
-
                     if (this.state !== 'EXPLORING') return;
 
                     const raycaster = new THREE.Raycaster();
@@ -435,15 +518,18 @@
 
                     if (intersects.length > 0) {
                         let obj = intersects[0].object;
-                        while (obj.parent && !obj.userData.starterKey) { obj = obj.parent; }
+                        while (obj.parent && !obj.userData.starterKey && !obj.userData.key) { obj = obj.parent; }
 
                         if (obj.userData.starterKey) {
                             const key = obj.userData.starterKey;
                             this.addPokemonToParty(key);
                             this.scene.remove(obj);
                             audio.playSfx('catch');
-                            const label = obj.userData.label || POKEMON_DATA[key].name;
-                            this.showDialogue("Secret Found!", `You obtained ${label}!`);
+                            const label = obj.userData.label || NationalDex.getPokemon(key).name;
+                            this.showDialogue("Discovery!", `You obtained ${label}!`);
+                        } else if (obj.userData.key) {
+                            // Clicked roaming overworld Pokémon -> Start Battle/Catch!
+                            this.startBattle(obj.userData.key);
                         }
                     }
                 });
@@ -455,10 +541,17 @@
             }
 
             addPokemonToParty(key) {
-                const data = POKEMON_DATA[key];
+                const data = NationalDex.getPokemon(key);
                 this.party.push({ ...data, currentHp: data.hp, level: 5 });
                 if (!this.activePokemon) this.activePokemon = this.party[0];
                 this.ui.partyBadge.textContent = this.party.length;
+
+                if (!this.caughtPokedex[data.name]) {
+                    this.caughtPokedex[data.name] = { ...data, count: 1 };
+                } else {
+                    this.caughtPokedex[data.name].count++;
+                }
+                this.ui.pokedexBadge.textContent = Object.keys(this.caughtPokedex).length;
             }
 
             showDialogue(speaker, text) {
@@ -471,25 +564,73 @@
 
             togglePartyModal() {
                 if (this.party.length === 0) {
-                    this.showDialogue("Notice", "Your party is empty. Explore the lab to choose a Pokémon!");
+                    this.showDialogue("Notice", "Your party is empty. Pick a starter in Oak's lab!");
                     return;
                 }
                 this.controls.unlock();
                 this.ui.partyList.innerHTML = '';
                 this.party.forEach((p) => {
                     this.ui.partyList.innerHTML += `
-                        <div class="hud-glass p-4 rounded-2xl flex items-center space-x-4 border border-slate-700">
+                        <div class="bg-slate-800 p-4 rounded-2xl flex items-center space-x-4 border border-slate-700">
                             <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg text-white" style="background: #${p.color.toString(16)}">
                                 ${p.name[0]}
                             </div>
                             <div>
                                 <h4 class="font-bold text-white">${p.name} <span class="text-xs text-slate-400">Lv. 5</span></h4>
-                                <p class="text-xs text-emerald-400 font-mono">HP: ${p.currentHp}/${p.maxHp}</p>
+                                <p class="text-xs text-emerald-400 font-mono">HP: ${p.currentHp}/${p.maxHp} | Type: ${p.type}</p>
                             </div>
                         </div>
                     `;
                 });
                 this.ui.partyModal.classList.remove('hidden');
+            }
+
+            togglePokedexModal() {
+                const caughtKeys = Object.keys(this.caughtPokedex);
+                if (caughtKeys.length === 0) {
+                    this.showDialogue("Pokédex Empty", "No Pokémon caught yet! Pick a starter or catch one roaming in the overworld.");
+                    return;
+                }
+                this.controls.unlock();
+                this.ui.pokedexList.innerHTML = '';
+                caughtKeys.forEach((key) => {
+                    const p = this.caughtPokedex[key];
+                    this.ui.pokedexList.innerHTML += `
+                        <div class="bg-slate-800 p-4 rounded-2xl flex items-center space-x-3 border border-emerald-500/30">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm text-white shrink-0" style="background: #${p.color.toString(16)}">
+                                #${p.id}
+                            </div>
+                            <div class="overflow-hidden">
+                                <h4 class="font-bold text-white text-sm truncate">${p.name}</h4>
+                                <span class="px-2 py-0.5 bg-slate-900 text-[10px] text-emerald-400 font-semibold rounded-full border border-slate-700">${p.type}</span>
+                                <p class="text-[10px] text-slate-400 mt-1 font-mono">Caught: ${p.count} | Atk: ${p.atk}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                this.ui.pokedexModal.classList.remove('hidden');
+            }
+
+            startBattle(wildKey) {
+                if (this.party.length === 0) {
+                    this.showDialogue("Warning", "You need a Pokémon in your party first!");
+                    return;
+                }
+                this.state = 'BATTLE';
+                this.controls.unlock();
+                this.ui.crosshair.classList.add('hidden');
+                const rawWild = NationalDex.getPokemon(wildKey);
+                this.wildPokemon = { ...rawWild, currentHp: rawWild.hp, level: 5, key: wildKey };
+                
+                document.getElementById('enemy-name').textContent = `Wild ${this.wildPokemon.name}`;
+                document.getElementById('enemy-hp-text').textContent = `${this.wildPokemon.currentHp}/${this.wildPokemon.maxHp} HP`;
+                document.getElementById('enemy-hp-bar').style.width = '100%';
+
+                document.getElementById('player-name').textContent = this.activePokemon.name;
+                document.getElementById('player-hp-text').textContent = `${this.activePokemon.currentHp}/${this.activePokemon.maxHp} HP`;
+                document.getElementById('player-hp-bar').style.width = `${(this.activePokemon.currentHp/this.activePokemon.maxHp)*100}%`;
+
+                this.ui.battleUi.classList.remove('hidden');
             }
 
             executeTurn(moveType) {
@@ -515,10 +656,11 @@
                 let chance = 0.5;
                 if (this.selectedBallType === 'heavyball' && this.wildPokemon.weight === 'heavy') chance = 0.95;
                 if (this.selectedBallType === 'friendball') chance = 0.85;
+                if (this.selectedBallType === 'luxuryball') chance = 0.9;
                 if (this.selectedBallType === 'masterball') chance = 1.0;
 
                 if (Math.random() < chance) {
-                    document.getElementById('battle-message').textContent = `Caught ${this.wildPokemon.name}!`;
+                    document.getElementById('battle-message').textContent = `Caught ${this.wildPokemon.name}! Added to Pokédex!`;
                     this.addPokemonToParty(this.wildPokemon.key);
                     setTimeout(() => this.endBattle(true), 1200);
                 } else {
@@ -535,6 +677,14 @@
 
             animate() {
                 requestAnimationFrame(() => this.animate());
+
+                // Animate Overworld Roaming Pokémon (Walking around like Let's Go!)
+                this.overworldRoaming.forEach(roam => {
+                    roam.angle += 0.01;
+                    roam.mesh.position.x = roam.originX + Math.sin(roam.angle) * 8;
+                    roam.mesh.position.z = roam.originZ + Math.cos(roam.angle) * 8;
+                });
+
                 if (this.state === 'EXPLORING' && this.controls.isLocked) {
                     const delta = 0.02;
                     this.velocity.x -= this.velocity.x * 10.0 * delta;
