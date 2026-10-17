@@ -9,13 +9,11 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; user-select: none; }
+        body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; user-select: none; background: #0f172a; }
         #canvas-container { width: 100vw; height: 100vh; }
-        .hud-glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); }
-        .glow-text { text-shadow: 0 0 10px rgba(59, 130, 246, 0.6); }
-        .pixel-border { border: 2px solid #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
-        @keyframes pulse-light { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.9; } }
-        .animate-pulse-slow { animation: pulse-light 3s infinite ease-in-out; }
+        .hud-glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .glow-text { text-shadow: 0 0 12px rgba(59, 130, 246, 0.8); }
+        .pixel-border { border: 2px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
     </style>
 </head>
 <body class="bg-slate-950 text-white">
@@ -24,21 +22,21 @@
 
     <!-- Crosshair -->
     <div id="crosshair" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden z-20">
-        <div class="w-3 h-3 bg-white/80 rounded-full border border-slate-900 shadow-md"></div>
+        <div class="w-3 h-3 bg-white/90 rounded-full border border-slate-900 shadow-lg"></div>
     </div>
 
     <!-- Top Navigation / Status HUD -->
     <div id="top-hud" class="fixed top-4 left-4 right-4 flex justify-between items-center z-10 pointer-events-none">
-        <div class="hud-glass px-4 py-2 rounded-xl flex items-center space-x-3 pointer-events-auto">
+        <div class="hud-glass px-4 py-2 rounded-xl flex items-center space-x-3 pointer-events-auto shadow-lg">
             <div class="w-3 h-3 bg-emerald-400 rounded-full animate-ping"></div>
             <span id="region-display" class="font-bold tracking-wide text-emerald-400 text-sm uppercase">Pallet Town Lab</span>
         </div>
 
         <div class="flex items-center space-x-3 pointer-events-auto">
-            <button id="music-btn" class="hud-glass p-3 rounded-xl hover:bg-slate-800 transition flex items-center justify-center text-amber-400">
+            <button id="music-btn" class="hud-glass p-3 rounded-xl hover:bg-slate-800/80 transition flex items-center justify-center text-amber-400 shadow-lg">
                 <i class="fas me-2 fa-music"></i> <span id="music-status" class="text-xs font-bold">MUSIC: OFF</span>
             </button>
-            <button id="party-btn" class="hud-glass px-4 py-2.5 rounded-xl hover:bg-slate-800 transition flex items-center space-x-2 text-sky-400 font-bold text-sm">
+            <button id="party-btn" class="hud-glass px-4 py-2.5 rounded-xl hover:bg-slate-800/80 transition flex items-center space-x-2 text-sky-400 font-bold text-sm shadow-lg">
                 <i class="fas fa-th-list"></i>
                 <span>PARTY (P)</span>
                 <span id="party-count-badge" class="bg-sky-500 text-slate-950 px-2 py-0.5 rounded-full text-xs ml-1 font-extrabold">0</span>
@@ -47,23 +45,23 @@
     </div>
 
     <!-- Start Overlay -->
-    <div id="start-screen" class="fixed inset-0 bg-slate-950/90 z-30 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-500">
+    <div id="start-screen" class="fixed inset-0 bg-slate-950/80 z-30 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-500">
         <div class="max-w-md w-full hud-glass p-8 rounded-3xl pixel-border">
-            <div class="w-20 h-20 bg-red-500 rounded-full mx-auto mb-6 flex items-center justify-center border-4 border-slate-900 shadow-lg relative">
+            <div class="w-20 h-20 bg-red-500 rounded-full mx-auto mb-6 flex items-center justify-center border-4 border-slate-900 shadow-xl relative">
                 <div class="w-full h-2 bg-slate-900 absolute"></div>
                 <div class="w-8 h-8 bg-white rounded-full border-4 border-slate-900 z-10 flex items-center justify-center">
                     <div class="w-3 h-3 bg-slate-400 rounded-full"></div>
                 </div>
             </div>
-            <h1 class="text-3xl font-extrabold tracking-tight text-white mb-2 glow-text">POKÉMON STARTER ADVENTURE</h1>
-            <p class="text-slate-400 text-sm mb-6">Explore regional biomes, encounter 3D Pokémon, engage in turn-based battles, and build your team!</p>
+            <h1 class="text-3xl font-extrabold tracking-tight text-white mb-2 glow-text">POKÉMON ADVENTURE 3D</h1>
+            <p class="text-slate-300 text-sm mb-6">Explore bright open biomes, interact with realistic 3D Pokémon roaming the terrain, and catch wild starters!</p>
             <button id="start-btn" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-lg transform active:scale-95 transition">
-                CLICK TO START ADVENTURE
+                CLICK TO ENTER WORLD
             </button>
-            <div class="mt-6 text-xs text-slate-500 flex justify-center space-x-4">
-                <span><i class="fas fa-keyboard"></i> WASD to Move</span>
-                <span><i class="fas fa-mouse"></i> Mouse to Look</span>
-                <span><i class="fas fa-hand-pointer"></i> Click Pokéballs</span>
+            <div class="mt-6 text-xs text-slate-400 flex justify-center space-x-4">
+                <span><i class="fas fa-keyboard me-1"></i> WASD to Move</span>
+                <span><i class="fas fa-mouse me-1"></i> Mouse to Look</span>
+                <span><i class="fas fa-hand-pointer me-1"></i> Click Pokéballs</span>
             </div>
         </div>
     </div>
@@ -71,9 +69,9 @@
     <!-- Dialogue Box -->
     <div id="dialogue-box" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl hud-glass p-5 rounded-2xl hidden z-20 transition-all border-l-4 border-l-blue-500 shadow-2xl">
         <h3 id="dialogue-speaker" class="text-xs font-bold uppercase tracking-wider text-blue-400 mb-1">Prof. Oak</h3>
-        <p id="dialogue-text" class="text-sm md:text-base text-slate-200 leading-relaxed"></p>
+        <p id="dialogue-text" class="text-sm md:text-base text-slate-100 leading-relaxed"></p>
         <div class="text-right mt-2">
-            <span class="text-xs text-slate-400 animate-pulse">[Click anywhere to continue]</span>
+            <span class="text-xs text-slate-400 animate-pulse">[Click to continue]</span>
         </div>
     </div>
 
@@ -90,14 +88,13 @@
                 </button>
             </div>
             <div id="party-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2">
-                <!-- Party members populated dynamically -->
+                <!-- Party members -->
             </div>
         </div>
     </div>
 
     <!-- Battle Overlay UI -->
     <div id="battle-ui" class="fixed inset-0 z-30 hidden pointer-events-none flex flex-col justify-between p-6">
-        <!-- Enemy Status -->
         <div class="self-start pointer-events-auto hud-glass p-4 rounded-2xl w-72 border-l-4 border-l-rose-500 shadow-xl">
             <div class="flex justify-between items-center mb-1">
                 <span id="enemy-name" class="font-bold text-white uppercase text-sm">Wild Charmander</span>
@@ -109,7 +106,6 @@
             <div class="text-right text-[10px] text-slate-400 mt-1 font-mono" id="enemy-hp-text">20/20 HP</div>
         </div>
 
-        <!-- Player Status -->
         <div class="self-end pointer-events-auto hud-glass p-4 rounded-2xl w-72 border-r-4 border-r-emerald-500 shadow-xl">
             <div class="flex justify-between items-center mb-1">
                 <span id="player-name" class="font-bold text-white uppercase text-sm">Pikachu</span>
@@ -121,7 +117,6 @@
             <div class="text-right text-[10px] text-slate-400 mt-1 font-mono" id="player-hp-text">22/22 HP</div>
         </div>
 
-        <!-- Battle Controls -->
         <div class="self-center w-full max-w-xl pointer-events-auto hud-glass p-4 rounded-2xl shadow-2xl border border-slate-700">
             <div id="battle-message" class="text-center font-semibold text-slate-200 text-sm mb-3 min-h-[1.25rem]">
                 What will your Pokémon do?
@@ -178,7 +173,7 @@
             playSfx(type) {
                 this.init();
                 if (type === 'select') {
-                    this.playTone(523.25, 'sine', 0.1, 0.15); // C5
+                    this.playTone(523.25, 'sine', 0.1, 0.15);
                 } else if (type === 'attack') {
                     this.playTone(150, 'sawtooth', 0.2, 0.2);
                     setTimeout(() => this.playTone(300, 'square', 0.15, 0.15), 50);
@@ -224,12 +219,12 @@
         const audio = new AudioEngine();
 
         const POKEMON_DATA = {
-            bulbasaur: { name: 'Bulbasaur', type: 'Grass', color: 0x10b981, hp: 20, maxHp: 20, atk: 8, moves: ['Tackle', 'Vine Whip'] },
+            bulbasaur: { name: 'Bulbasaur', type: 'Grass', color: 0x22c55e, hp: 20, maxHp: 20, atk: 8, moves: ['Tackle', 'Vine Whip'] },
             charmander: { name: 'Charmander', type: 'Fire', color: 0xf97316, hp: 19, maxHp: 19, atk: 9, moves: ['Scratch', 'Ember'] },
             squirtle: { name: 'Squirtle', type: 'Water', color: 0x06b6d4, hp: 22, maxHp: 22, atk: 7, moves: ['Tackle', 'Water Gun'] },
             pikachu: { name: 'Pikachu', type: 'Electric', color: 0xeab308, hp: 18, maxHp: 18, atk: 10, moves: ['Quick Attack', 'Thunder Shock'] },
-            eevee: { name: 'Eevee', type: 'Normal', color: 0xb45309, hp: 21, maxHp: 21, atk: 8, moves: ['Tackle', 'Bite'] },
-            vulpix: { name: 'Alolan Vulpix', type: 'Ice', color: 0xe0f2fe, hp: 18, maxHp: 18, atk: 9, moves: ['Powder Snow', 'Ice Shard'] },
+            eevee: { name: 'Eevee', type: 'Normal', color: 0xa16207, hp: 21, maxHp: 21, atk: 8, moves: ['Tackle', 'Bite'] },
+            vulpix: { name: 'Alolan Vulpix', type: 'Ice', color: 0xbae6fd, hp: 18, maxHp: 18, atk: 9, moves: ['Powder Snow', 'Ice Shard'] },
             slowpoke: { name: 'Galarian Slowpoke', type: 'Psychic', color: 0xf472b6, hp: 25, maxHp: 25, atk: 6, moves: ['Confusion', 'Headbutt'] },
             mewtwo: { name: 'Mewtwo', type: 'Psychic', color: 0xa855f7, hp: 40, maxHp: 40, atk: 18, moves: ['Psystrike', 'Aura Sphere'] },
             xerneas: { name: 'Xerneas', type: 'Fairy', color: 0x38bdf8, hp: 35, maxHp: 35, atk: 15, moves: ['Moonblast', 'Horn Leech'] }
@@ -238,101 +233,126 @@
         function createDetailedPokemonMesh(key) {
             const group = new THREE.Group();
             const data = POKEMON_DATA[key] || POKEMON_DATA.pikachu;
+            
+            // Materials with improved lighting response
             const matMain = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.3, metalness: 0.1 });
-            const matDark = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 });
+            const matDark = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
             const matWhite = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
+            const matPink = new THREE.MeshStandardMaterial({ color: 0xf43f5e, roughness: 0.4 });
 
             // Body Base
-            const bodyGeo = new THREE.DodecahedronGeometry(0.7, 2);
+            const bodyGeo = new THREE.SphereGeometry(0.65, 32, 32);
+            bodyGeo.scale(1, 0.9, 1.1);
             const body = new THREE.Mesh(bodyGeo, matMain);
+            body.position.y = 0.65;
             body.castShadow = true;
             body.receiveShadow = true;
             group.add(body);
 
             // Head
-            const headGeo = new THREE.SphereGeometry(0.5, 16, 16);
+            const headGeo = new THREE.SphereGeometry(0.48, 32, 32);
             const head = new THREE.Mesh(headGeo, matMain);
-            head.position.set(0, 0.7, 0.3);
+            head.position.set(0, 1.2, 0.3);
             head.castShadow = true;
             group.add(head);
 
-            // Eyes (Detailed)
-            const eyeGeo = new THREE.SphereGeometry(0.1, 8, 8);
-            const pupilGeo = new THREE.SphereGeometry(0.04, 8, 8);
+            // Eyes
+            const eyeGeo = new THREE.SphereGeometry(0.09, 16, 16);
+            const pupilGeo = new THREE.SphereGeometry(0.04, 16, 16);
 
             const eyeL = new THREE.Mesh(eyeGeo, matWhite);
-            eyeL.position.set(-0.2, 0.8, 0.7);
+            eyeL.position.set(-0.18, 1.28, 0.7);
             const pupilL = new THREE.Mesh(pupilGeo, matDark);
-            pupilL.position.set(-0.2, 0.8, 0.78);
+            pupilL.position.set(-0.18, 1.28, 0.77);
 
             const eyeR = new THREE.Mesh(eyeGeo, matWhite);
-            eyeR.position.set(0.2, 0.8, 0.7);
+            eyeR.position.set(0.18, 1.28, 0.7);
             const pupilR = new THREE.Mesh(pupilGeo, matDark);
-            pupilR.position.set(0.2, 0.8, 0.78);
+            pupilR.position.set(0.18, 1.28, 0.77);
 
             group.add(eyeL, pupilL, eyeR, pupilR);
 
-            // Distinct Species Characteristics
+            // Distinct Species Features
             if (key === 'charmander') {
-                const flameGeo = new THREE.ConeGeometry(0.2, 0.6, 8);
-                const flameMat = new THREE.MeshBasicMaterial({ color: 0xff4500 });
+                const tailGeo = new THREE.CylinderGeometry(0.1, 0.02, 0.8, 16);
+                const tail = new THREE.Mesh(tailGeo, matMain);
+                tail.position.set(0, 0.5, -0.7);
+                tail.rotation.x = -Math.PI / 3;
+                
+                const flameGeo = new THREE.ConeGeometry(0.18, 0.5, 16);
+                const flameMat = new THREE.MeshBasicMaterial({ color: 0xff3300 });
                 const flame = new THREE.Mesh(flameGeo, flameMat);
-                flame.position.set(0, 0.2, -0.9);
+                flame.position.set(0, 0.8, -1.0);
                 flame.rotation.x = -Math.PI / 4;
-                group.add(flame);
+                group.add(tail, flame);
             } else if (key === 'bulbasaur') {
-                const bulbGeo = new THREE.ConeGeometry(0.4, 0.7, 6);
-                const bulbMat = new THREE.MeshStandardMaterial({ color: 0x047857 });
+                const bulbGeo = new THREE.SphereGeometry(0.45, 16, 16);
+                const bulbMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.5 });
                 const bulb = new THREE.Mesh(bulbGeo, bulbMat);
-                bulb.position.set(0, 0.7, -0.2);
-                bulb.rotation.x = -Math.PI / 6;
+                bulb.scale.set(0.9, 1.2, 0.9);
+                bulb.position.set(0, 1.0, -0.2);
                 group.add(bulb);
             } else if (key === 'squirtle') {
-                const shellGeo = new THREE.SphereGeometry(0.75, 12, 12);
-                const shellMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
+                const shellGeo = new THREE.SphereGeometry(0.72, 16, 16);
+                const shellMat = new THREE.MeshStandardMaterial({ color: 0x854d0e, roughness: 0.4 });
                 const shell = new THREE.Mesh(shellGeo, shellMat);
-                shell.scale.set(1, 1, 0.6);
-                shell.position.set(0, 0.1, -0.3);
+                shell.scale.set(1, 1, 0.65);
+                shell.position.set(0, 0.65, -0.3);
                 group.add(shell);
             } else if (key === 'pikachu') {
-                const earGeo = new THREE.ConeGeometry(0.12, 0.6, 8);
+                const earGeo = new THREE.ConeGeometry(0.1, 0.7, 16);
                 const earL = new THREE.Mesh(earGeo, matMain);
-                earL.position.set(-0.35, 1.3, 0.2);
+                earL.position.set(-0.3, 1.7, 0.2);
                 earL.rotation.z = 0.4;
                 const earR = new THREE.Mesh(earGeo, matMain);
-                earR.position.set(0.35, 1.3, 0.2);
+                earR.position.set(0.3, 1.7, 0.2);
                 earR.rotation.z = -0.4;
-                group.add(earL, earR);
+
+                const cheekGeo = new THREE.SphereGeometry(0.1, 12, 12);
+                const cheekL = new THREE.Mesh(cheekGeo, matPink);
+                cheekL.position.set(-0.32, 1.15, 0.62);
+                const cheekR = new THREE.Mesh(cheekGeo, matPink);
+                cheekR.position.set(0.32, 1.15, 0.62);
+
+                group.add(earL, earR, cheekL, cheekR);
+            } else if (key === 'eevee') {
+                const ruffGeo = new THREE.TorusGeometry(0.4, 0.18, 16, 32);
+                const ruffMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.8 });
+                const ruff = new THREE.Mesh(ruffGeo, ruffMat);
+                ruff.position.set(0, 0.95, 0.2);
+                ruff.rotation.x = Math.PI / 2;
+                group.add(ruff);
             } else if (key === 'mewtwo') {
-                const tailGeo = new THREE.TorusGeometry(0.6, 0.12, 8, 16, Math.PI);
-                const tailMat = new THREE.MeshStandardMaterial({ color: 0x7e22ce });
+                const tailGeo = new THREE.TorusGeometry(0.75, 0.15, 16, 32, Math.PI);
+                const tailMat = new THREE.MeshStandardMaterial({ color: 0x7e22ce, roughness: 0.2 });
                 const tail = new THREE.Mesh(tailGeo, tailMat);
-                tail.position.set(0, 0.2, -0.7);
+                tail.position.set(0, 0.4, -0.8);
                 tail.rotation.x = Math.PI / 2;
                 group.add(tail);
             } else if (key === 'xerneas') {
-                const hornGeo = new THREE.CylinderGeometry(0.04, 0.08, 1.2);
-                const hornMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xf59e0b, emissiveIntensity: 0.6 });
+                const hornGeo = new THREE.CylinderGeometry(0.03, 0.06, 1.4, 16);
+                const hornMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xf59e0b, emissiveIntensity: 0.8 });
                 const hornL = new THREE.Mesh(hornGeo, hornMat);
-                hornL.position.set(-0.4, 1.6, 0.2);
+                hornL.position.set(-0.4, 2.1, 0.2);
                 hornL.rotation.z = -0.5;
                 const hornR = new THREE.Mesh(hornGeo, hornMat);
-                hornR.position.set(0.4, 1.6, 0.2);
+                hornR.position.set(0.4, 2.1, 0.2);
                 hornR.rotation.z = 0.5;
                 group.add(hornL, hornR);
             }
 
             // Limb Spheres
-            const limbGeo = new THREE.SphereGeometry(0.18, 8, 8);
-            for (let x of [-0.4, 0.4]) {
-                for (let z of [-0.3, 0.3]) {
+            const limbGeo = new THREE.SphereGeometry(0.18, 16, 16);
+            for (let x of [-0.35, 0.35]) {
+                for (let z of [-0.25, 0.35]) {
                     const limb = new THREE.Mesh(limbGeo, matMain);
-                    limb.position.set(x, -0.5, z);
+                    limb.position.set(x, 0.2, z);
                     limb.castShadow = true;
                     group.add(limb);
                 }
             }
 
+            group.userData = { key: key };
             return group;
         }
 
@@ -345,6 +365,7 @@
                 this.encounterZones = [];
                 this.portals = [];
                 this.sceneObjects = [];
+                this.roamingPokemon = [];
 
                 this.ui = {
                     startScreen: document.getElementById('start-screen'),
@@ -382,32 +403,32 @@
 
             initScene() {
                 this.scene = new THREE.Scene();
-                this.scene.background = new THREE.Color(0x0f172a);
-                this.scene.fog = new THREE.FogExp2(0x0f172a, 0.008);
+                this.scene.background = new THREE.Color(0x38bdf8); // Bright sunny blue sky
+                this.scene.fog = new THREE.FogExp2(0xe0f2fe, 0.003); // Soft atmospheric haze
 
                 this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                this.camera.position.set(0, 1.7, 5);
+                this.camera.position.set(0, 1.8, 5);
 
                 this.renderer = new THREE.WebGLRenderer({ antialias: true });
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
                 this.renderer.shadowMap.enabled = true;
                 this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
                 this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1.1;
+                this.renderer.toneMappingExposure = 1.3;
                 document.getElementById('canvas-container').appendChild(this.renderer.domElement);
 
-                // Realistic Atmospheric Lighting
-                const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+                // High-intensity Sun Lighting
+                const ambient = new THREE.AmbientLight(0xffffff, 1.2);
                 this.scene.add(ambient);
 
-                const sun = new THREE.DirectionalLight(0xfffbeb, 1.5);
-                sun.position.set(60, 120, 60);
+                const sun = new THREE.DirectionalLight(0xfffbeb, 2.5);
+                sun.position.set(80, 150, 60);
                 sun.castShadow = true;
                 sun.shadow.mapSize.width = 2048;
                 sun.shadow.mapSize.height = 2048;
                 sun.shadow.camera.near = 0.5;
-                sun.shadow.camera.far = 500;
-                const d = 150;
+                sun.shadow.camera.far = 600;
+                const d = 200;
                 sun.shadow.camera.left = -d;
                 sun.shadow.camera.right = d;
                 sun.shadow.camera.top = d;
@@ -416,16 +437,16 @@
             }
 
             initWorld() {
-                // Lab Flooring
+                // Main Pallet Town Lab Floor
                 const labGeo = new THREE.PlaneGeometry(60, 60);
-                const labMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6, metalness: 0.1 });
+                const labMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.3 });
                 const labFloor = new THREE.Mesh(labGeo, labMat);
                 labFloor.rotation.x = -Math.PI / 2;
                 labFloor.receiveShadow = true;
                 this.scene.add(labFloor);
 
                 // Lab Structure Walls
-                this.createBuilding(0, 0, -10, 24, 10, 20, 0x1e293b);
+                this.createBuilding(0, 0, -10, 24, 10, 20, 0xe2e8f0);
 
                 // Starter Selection Table
                 const tableGeo = new THREE.BoxGeometry(6, 1.2, 2.5);
@@ -455,36 +476,49 @@
                     this.sceneObjects.push(ball);
                 });
 
-                // Overworld 3D Pokémon Spawns
-                this.addOverworldPokemon('pikachu', -30, 0.6, 40);
-                this.addOverworldPokemon('eevee', -40, 0.6, 50);
-                this.addOverworldPokemon('vulpix', 40, 0.6, 40);
-                this.addOverworldPokemon('mewtwo', 0, 0.6, -110); // Secret Legend Pokemon in Cave Zone
+                // Spawning Roaming Overworld 3D Pokémon in Biomes
+                this.spawnRoamingPokemon('pikachu', -40, 40, 'Kanto Route 1');
+                this.spawnRoamingPokemon('eevee', -60, 60, 'Kanto Route 1');
+                this.spawnRoamingPokemon('vulpix', 40, 50, 'Alola Snowy Peak');
+                this.spawnRoamingPokemon('slowpoke', 70, 70, 'Alola Snowy Peak');
+                this.spawnRoamingPokemon('mewtwo', 0, -110, 'Secret Mewtwo Cave');
+                this.spawnRoamingPokemon('xerneas', 150, 0, 'Lumiose City');
 
                 // Wild Encounter Regions
-                this.createGrassZone(-120, -20, 20, 120, 'Kanto Route 1', ['pikachu', 'eevee']);
-                this.createGrassZone(20, 120, 20, 120, 'Alola Snowy Peak', ['vulpix', 'slowpoke']);
-                this.createGrassZone(-60, 60, -140, -80, 'Secret Mewtwo Cave', ['mewtwo']);
+                this.createGrassZone(-120, -20, 20, 120, 'Kanto Route 1', ['pikachu', 'eevee'], 0x22c55e);
+                this.createGrassZone(20, 120, 20, 120, 'Alola Snowy Peak', ['vulpix', 'slowpoke'], 0xe0f2fe);
+                this.createGrassZone(-60, 60, -140, -80, 'Secret Mewtwo Cave', ['mewtwo'], 0x475569);
 
                 // Lumiose City (Kalos Hub)
                 this.createLumioseCity(150, 0, 0);
 
                 // Teleportation Portals
-                this.createPortal(-20, 0, 15, -70, 0, 50, 0x10b981); // Route 1 Portal
-                this.createPortal(20, 0, 15, 70, 0, 50, 0x06b6d4);  // Alola Portal
-                this.createPortal(0, 0, -18, 0, 0, -90, 0x8b5cf6);   // Secret Cave Portal
-                this.createPortal(10, 0, 25, 150, 0, 20, 0xeab308);   // Lumiose City Portal
+                this.createPortal(-20, 0, 15, -70, 0, 50, 0x10b981);
+                this.createPortal(20, 0, 15, 70, 0, 50, 0x06b6d4);
+                this.createPortal(0, 0, -18, 0, 0, -90, 0x8b5cf6);
+                this.createPortal(10, 0, 25, 150, 0, 20, 0xeab308);
             }
 
-            addOverworldPokemon(key, x, y, z) {
+            spawnRoamingPokemon(key, x, z, regionName) {
                 const mesh = createDetailedPokemonMesh(key);
-                mesh.position.set(x, y, z);
+                mesh.position.set(x, 0, z);
                 this.scene.add(mesh);
+                this.sceneObjects.push(mesh);
+                this.roamingPokemon.push({
+                    mesh: mesh,
+                    key: key,
+                    region: regionName,
+                    originX: x,
+                    originZ: z,
+                    targetX: x,
+                    targetZ: z,
+                    speed: 0.02 + Math.random() * 0.02
+                });
             }
 
             createBuilding(x, y, z, width, height, depth, colorHex) {
                 const bGeo = new THREE.BoxGeometry(width, height, depth);
-                const bMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.5 });
+                const bMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.4 });
                 const building = new THREE.Mesh(bGeo, bMat);
                 building.position.set(x, y + height / 2, z);
                 building.castShadow = true;
@@ -493,16 +527,14 @@
             }
 
             createLumioseCity(cx, cy, cz) {
-                // City Plaza Floor
                 const floorGeo = new THREE.CircleGeometry(80, 32);
-                const floorMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5 });
+                const floorMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.5 });
                 const floor = new THREE.Mesh(floorGeo, floorMat);
                 floor.rotation.x = -Math.PI / 2;
                 floor.position.set(cx, cy, cz);
                 floor.receiveShadow = true;
                 this.scene.add(floor);
 
-                // Lumiose Prism Tower (Centerpiece)
                 const towerGroup = new THREE.Group();
                 const baseGeo = new THREE.CylinderGeometry(8, 12, 15, 8);
                 const midGeo = new THREE.CylinderGeometry(4, 8, 25, 8);
@@ -521,12 +553,11 @@
                 towerGroup.traverse(child => { if (child.isMesh) child.castShadow = true; });
                 this.scene.add(towerGroup);
 
-                // Surrounding Buildings
                 for (let i = 0; i < 8; i++) {
                     const angle = (i / 8) * Math.PI * 2;
                     const bx = cx + Math.cos(angle) * 55;
                     const bz = cz + Math.sin(angle) * 55;
-                    this.createBuilding(bx, cy, bz, 16, 25 + (i % 3) * 8, 16, 0x0f172a);
+                    this.createBuilding(bx, cy, bz, 16, 25 + (i % 3) * 8, 16, 0x1e293b);
                 }
 
                 this.encounterZones.push({
@@ -535,13 +566,13 @@
                 });
             }
 
-            createGrassZone(xMin, xMax, zMin, zMax, regionName, pool) {
+            createGrassZone(xMin, xMax, zMin, zMax, regionName, pool, colorHex) {
                 this.encounterZones.push({ xMin, xMax, zMin, zMax, regionName, pool });
 
                 const groundWidth = Math.abs(xMax - xMin);
                 const groundDepth = Math.abs(zMax - zMin);
                 const groundGeo = new THREE.PlaneGeometry(groundWidth, groundDepth);
-                const groundMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.9 });
+                const groundMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.8 });
                 const ground = new THREE.Mesh(groundGeo, groundMat);
                 ground.rotation.x = -Math.PI / 2;
                 ground.position.set((xMin + xMax) / 2, -0.01, (zMin + zMax) / 2);
@@ -555,11 +586,11 @@
 
                 const torus = new THREE.Mesh(
                     new THREE.TorusGeometry(1.8, 0.2, 16, 32),
-                    new THREE.MeshBasicMaterial({ color: colorHex })
+                    new THREE.MeshStandardMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.6 })
                 );
                 group.add(torus);
 
-                const light = new THREE.PointLight(colorHex, 4, 15);
+                const light = new THREE.PointLight(colorHex, 5, 20);
                 group.add(light);
 
                 this.scene.add(group);
@@ -580,12 +611,11 @@
                     setTimeout(() => this.ui.startScreen.style.display = 'none', 500);
                     this.ui.crosshair.style.display = 'block';
                     if (this.state === 'INTRO') {
-                        this.showDialogue('Prof. Oak', 'Welcome to the lab! Step up to the table and click on a Pokéball to select your starter Pokémon!');
+                        this.showDialogue('Prof. Oak', 'Welcome! Click on a Pokéball on the table to choose your starter, or head out directly into the bright biomes to interact with wild roaming Pokémon!');
                     }
                 });
 
                 this.controls.addEventListener('unlock', () => {
-                    // Only display start overlay if party menu and battle UI are closed
                     if (this.state !== 'BATTLE' && this.ui.partyModal.classList.contains('hidden')) {
                         this.ui.startScreen.style.display = 'flex';
                         this.ui.startScreen.style.opacity = '1';
@@ -596,7 +626,7 @@
                 document.addEventListener('keydown', (e) => this.onKey(e, true));
                 document.addEventListener('keyup', (e) => this.onKey(e, false));
 
-                // Interaction Raycasting
+                // Interaction Raycasting for Starter Balls and Roaming Pokemon
                 const raycaster = new THREE.Raycaster();
                 document.addEventListener('mousedown', () => {
                     if (!this.controls.isLocked) return;
@@ -606,11 +636,17 @@
 
                     if (intersects.length > 0) {
                         let obj = intersects[0].object;
-                        while (obj.parent && !obj.userData.starterKey) {
+                        while (obj.parent && !obj.userData.starterKey && !obj.userData.key) {
                             obj = obj.parent;
                         }
+                        
+                        // Claiming starter
                         if (obj.userData.starterKey && this.party.length === 0) {
                             this.claimStarter(obj.userData.starterKey);
+                        } 
+                        // Interacting directly with roaming 3D Pokemon
+                        else if (obj.userData.key) {
+                            this.startBattle(obj.userData.key);
                         }
                     }
                 });
@@ -630,7 +666,6 @@
                     }
                 });
 
-                // Battle UI Controls
                 this.ui.btnAttack1.addEventListener('click', () => this.executeTurn(0));
                 this.ui.btnAttack2.addEventListener('click', () => this.executeTurn(1));
                 this.ui.btnCatch.addEventListener('click', () => this.attemptCatch());
@@ -653,7 +688,7 @@
                 this.ui.dialogueSpeaker.innerText = speaker;
                 this.ui.dialogueText.innerText = text;
                 this.ui.dialogueBox.classList.remove('hidden');
-                setTimeout(() => this.ui.dialogueBox.classList.add('hidden'), 5000);
+                setTimeout(() => this.ui.dialogueBox.classList.add('hidden'), 6000);
             }
 
             claimStarter(key) {
@@ -663,7 +698,7 @@
                 this.updatePartyUI();
 
                 audio.playSfx('catch');
-                this.showDialogue('Prof. Oak', `Congratulations! You received ${pkmn.name}! Step into the portals to explore wild routes and Lumiose City!`);
+                this.showDialogue('Prof. Oak', `Congratulations! You received ${pkmn.name}! Step into the portals to explore open biomes or challenge roaming 3D Pokémon directly!`);
             }
 
             togglePartyModal(show) {
@@ -675,7 +710,6 @@
                     }
                 } else {
                     this.ui.partyModal.classList.add('hidden');
-                    // Lock cursor back into viewport when closing party menu during active gameplay
                     if (this.state !== 'BATTLE') {
                         this.controls.lock();
                     }
@@ -709,7 +743,6 @@
             checkPortalsAndZones() {
                 const pos = this.camera.position;
 
-                // Portal Teleportation
                 this.portals.forEach(portal => {
                     if (pos.distanceTo(portal.mesh.position) < 2.2) {
                         pos.copy(portal.target);
@@ -717,12 +750,11 @@
                     }
                 });
 
-                // Encounter Checking
                 let currentRegion = 'Pallet Town Lab';
                 this.encounterZones.forEach(zone => {
                     if (pos.x >= zone.xMin && pos.x <= zone.xMax && pos.z >= zone.zMin && pos.z <= zone.zMax) {
                         currentRegion = zone.regionName;
-                        if (this.state === 'EXPLORE' && Math.random() < 0.008 && this.party.length > 0) {
+                        if (this.state === 'EXPLORE' && Math.random() < 0.005 && this.party.length > 0) {
                             const randomKey = zone.pool[Math.floor(Math.random() * zone.pool.length)];
                             this.startBattle(randomKey);
                         }
@@ -736,6 +768,11 @@
             }
 
             startBattle(wildKey) {
+                if (this.party.length === 0) {
+                    this.showDialogue('Prof. Oak', 'You need a Pokémon before entering battle! Choose a starter on the table first!');
+                    return;
+                }
+
                 this.state = 'BATTLE';
                 this.controls.unlock();
 
@@ -744,7 +781,6 @@
 
                 audio.startMusic('battle');
 
-                // Render Battle Overlay
                 document.getElementById('enemy-name').innerText = this.wildPokemon.name;
                 document.getElementById('enemy-level').innerText = `Lv. ${this.wildPokemon.level}`;
                 document.getElementById('enemy-hp-text').innerText = `${this.wildPokemon.hp}/${this.wildPokemon.maxHp} HP`;
@@ -768,7 +804,6 @@
                 const dmg = Math.floor(this.activePokemon.atk * (1 + Math.random() * 0.4));
                 this.wildPokemon.hp = Math.max(0, this.wildPokemon.hp - dmg);
 
-                // Update Enemy Bar
                 const enemyPct = (this.wildPokemon.hp / this.wildPokemon.maxHp) * 100;
                 document.getElementById('enemy-hp-bar').style.width = `${enemyPct}%`;
                 document.getElementById('enemy-hp-text').innerText = `${this.wildPokemon.hp}/${this.wildPokemon.maxHp} HP`;
@@ -783,7 +818,6 @@
                     return;
                 }
 
-                // Enemy Retaliation
                 setTimeout(() => {
                     const eDmg = Math.floor(this.wildPokemon.atk * 0.8);
                     this.activePokemon.hp = Math.max(0, this.activePokemon.hp - eDmg);
@@ -834,8 +868,8 @@
                     this.direction.x = Number(this.move.right) - Number(this.move.left);
                     this.direction.normalize();
 
-                    if (this.move.forward || this.move.backward) this.velocity.z -= this.direction.z * 0.03;
-                    if (this.move.left || this.move.right) this.velocity.x -= this.direction.x * 0.03;
+                    if (this.move.forward || this.move.backward) this.velocity.z -= this.direction.z * 0.04;
+                    if (this.move.left || this.move.right) this.velocity.x -= this.direction.x * 0.04;
 
                     this.controls.moveRight(-this.velocity.x);
                     this.controls.moveForward(-this.velocity.z);
@@ -846,6 +880,24 @@
                     this.checkPortalsAndZones();
                 }
 
+                // AI Roaming Animations for Overworld Pokémon
+                this.roamingPokemon.forEach(p => {
+                    const dx = p.targetX - p.mesh.position.x;
+                    const dz = p.targetZ - p.mesh.position.z;
+                    const dist = Math.sqrt(dx * dx + dz * dz);
+
+                    if (dist < 0.5) {
+                        p.targetX = p.originX + (Math.random() - 0.5) * 20;
+                        p.targetZ = p.originZ + (Math.random() - 0.5) * 20;
+                    } else {
+                        p.mesh.position.x += (dx / dist) * p.speed;
+                        p.mesh.position.z += (dz / dist) * p.speed;
+                        p.mesh.rotation.y = Math.atan2(dx, dz);
+                    }
+                    // Idle breathing animation
+                    p.mesh.position.y = Math.sin(Date.now() * 0.003) * 0.08;
+                });
+
                 // Scene Object Animations
                 this.portals.forEach(p => {
                     p.mesh.rotation.z += 0.02;
@@ -855,7 +907,6 @@
             }
         }
 
-        // Initialize Adventure Engine on DOM Load
         window.onload = () => {
             new AdventureGame();
         };
